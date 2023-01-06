@@ -1,0 +1,104 @@
+import json
+from pprint import pformat
+from typing import List
+
+import openai
+import spacy
+from loguru import logger
+from podcast2podcast.config import settings
+from podcast2podcast.utils import retry
+
+
+def summarize_pipeline(
+    transcript: str, podcast: str, episode_name: str, page=100
+) -> str:
+    """Create a new dialog transcript from a podcast transcript.
+
+    Args:
+        transcript (str): The transcript of the podcast episode.
+        podcast (str): The name of the podcast.
+        episode_name (str): The name of the episode.
+
+    Returns:
+        NewPodcastDialogTranscript: The new dialog transcript."""
+    openai.api_key = settings.openai_token
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(transcript)
+    sents = [s.text.strip() for s in doc.sents]
+    logger.debug("transcription: {}", pformat(sents))
+    summaries = [" ".join(sents[i : i + page]) for i in range(0, len(sents), page)]
+    summaries = [summarize_snippet(snippet) for snippet in summaries]
+    logger.debug("summaries: {}", pformat(sents))
+    metasummary = summarize_summaries(summaries)
+    logger.debug("metasummary: {}", metasummary)
+    metasummary = remove_sponsers(metasummary)
+    logger.debug("metasummary without sponsers: {}", metasummary)
+    transcript = create_new_podcast_dialog(metasummary, podcast, episode_name)
+    logger.debug("new podcast dialog: {}", transcript)
+    return transcript
+
+
+@retry(n=2)
+def text_complete(
+    prompt: str,
+    completion_prefix: str = "",
+    model="text-davinci-003",
+):
+    """Complete text using OpenAI API.
+
+    Args:
+        prompt (str): Prompt to complete.
+        completion_prefix (str, optional): Prefix to add to output. Defaults to nothing.
+        model (str, optional): Model to use. Defaults to "text-davinci-003".
+
+    Returns:
+        str: Completed text, not including the prompt.
+    """
+    response = openai.Completion.create(
+        prompt=completion_prefix + prompt,
+        model=model,
+        temperature=0.7,
+        max_tokens=256,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    completion = response.choices[0]
+    return completion_prefix + completion
+
+
+def summarize_snippet(snippet: str) -> str:
+    """Summarize a snippet of the podcast."""
+    prompt = settings.prompt_templates.summarize_chunk.format(snippet)
+    return text_complete(prompt)
+
+
+def summarize_summaries(summaries: List[str]) -> str:
+    """Summarize a list of summaries."""
+    prompt = settings.prompt_templates.summarize_summaries.format(
+        summaries="\n".join(f" - {summary}" for summary in summaries),
+    )
+    completion = text_complete(prompt, completion_prefix='{"detailedSummary": "')
+    return json.loads(completion)
+
+
+def remove_sponsers(summary: str) -> str:
+    """Remove sponsers from a summary."""
+    prompt = settings.prompt_templates.remove_sponsers_from_summary.format(
+        summary=summary
+    )
+    completion = text_complete(prompt, completion_prefix='{"withoutSponsers": "')
+    return json.loads(completion)
+
+
+@retry(n=3)
+def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
+    """Create a new podcast dialog from a summary."""
+    prompt = settings.prompt_templates.rewrite_as_a_podcast_transcript.format(
+        summary=summary
+    )
+    completion_prefix = '{"transcript": "' + prompt.rewritten_podcast_first_line.format(
+        podcast=podcast, episode_name=episode_name
+    )
+    completion = text_complete(prompt, completion_prefix=completion_prefix)
+    return json.loads(completion)
