@@ -91,13 +91,11 @@ def text_complete(
     completion = completion_prefix + response.choices[0]["text"]
     if json_decode:
         try:
+            # JSON parser requires escaped newlines
+            completion = completion.replace("\n", r"\n")
             completion = json.loads(completion)
-        except json.JSONDecodeError as j:
-            e = Exception("Could not decode JSON: `{}`".format(completion))
-            e.response = response
-            e.complete = completion
-            e.j = j
-            raise e
+        except json.JSONDecodeError:
+            return Exception("Could not decode JSON: {}".format(completion))
     return completion
 
 
