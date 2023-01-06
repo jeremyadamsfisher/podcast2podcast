@@ -7,7 +7,7 @@ Snippet: {snippet}
 Summary:"""
 
 summarize_summaries = """
-Here are a chronological list of descriptions of snippets from a podcast.
+Here is a chronological list of descriptions of snippets from a podcast.
 
 {summaries}
 

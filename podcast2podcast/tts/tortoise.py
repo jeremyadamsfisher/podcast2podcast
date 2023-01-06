@@ -25,9 +25,11 @@ def text2speech_pipeline(
     tts = TextToSpeech()
     mouse_voice_samples, mouse_conditioning_latents = load_voice("train_mouse")
     speech = tts.tts_with_preset(
+        transcript,
+        preset=preset,
         voice_samples=mouse_voice_samples,
         conditioning_latents=mouse_conditioning_latents,
-    )(transcript, preset=preset)
+    )
     torchaudio.save(fp_out, speech.squeeze(0).cpu(), 24000)
 
     return fp_out
