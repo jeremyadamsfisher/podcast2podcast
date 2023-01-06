@@ -17,8 +17,14 @@ except ModuleNotFoundError:
 
 from . import data
 
+
+class DotDict:
+    def __init__(self, d):
+        self.__dict__.update(d)
+
+
 with importlib_resources.open_text(data, "prompt_templates.toml") as f:
-    prompt_templates = toml.load(f)
+    prompt_templates = DotDict(toml.load(f))
 
 
 def summarize_pipeline(
