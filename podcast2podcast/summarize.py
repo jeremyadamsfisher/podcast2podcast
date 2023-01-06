@@ -43,16 +43,22 @@ def summarize_pipeline(
     nlp = spacy.load("en_core_web_sm")
     doc = nlp(transcript)
     sents = [s.text.strip() for s in doc.sents]
+
     logger.debug("transcription: {}", pformat(sents))
-    summaries = [" ".join(sents[i : i + page]) for i in range(0, len(sents), page)]
-    summaries = [summarize_snippet(snippet) for snippet in summaries]
-    logger.debug("summaries: {}", pformat(sents))
+
+    snippets = [" ".join(sents[i : i + page]) for i in range(0, len(sents), page)]
+    summaries = [summarize_snippet(snippet) for snippet in snippets]
+    logger.debug("summaries: {}", pformat(summaries))
+
     metasummary = summarize_summaries(summaries)
     logger.debug("metasummary: {}", metasummary)
+
     metasummary = remove_sponsers(metasummary)
     logger.debug("metasummary without sponsers: {}", metasummary)
+
     transcript = create_new_podcast_dialog(metasummary, podcast, episode_name)
     logger.debug("new podcast dialog: {}", transcript)
+
     return transcript
 
 
@@ -61,6 +67,7 @@ def text_complete(
     prompt: str,
     completion_prefix: str = "",
     model="text-davinci-003",
+    json_decode: bool = False,
 ):
     """Complete text using OpenAI API.
 
@@ -81,13 +88,18 @@ def text_complete(
         frequency_penalty=0,
         presence_penalty=0,
     )
-    completion = response.choices[0]
-    return completion_prefix + completion
+    completion = completion_prefix + response.choices[0]["text"]
+    if json_decode:
+        try:
+            completion = json.loads(completion)
+        except json.JSONDecodeError:
+            raise Exception("Could not decode JSON: `{}`".format(completion))
+    return completion
 
 
 def summarize_snippet(snippet: str) -> str:
     """Summarize a snippet of the podcast."""
-    prompt = prompt_templates.summarize_chunk.format(snippet)
+    prompt = prompt_templates.summarize_snippet.format(snippet=snippet)
     return text_complete(prompt)
 
 
@@ -96,15 +108,17 @@ def summarize_summaries(summaries: List[str]) -> str:
     prompt = prompt_templates.summarize_summaries.format(
         summaries="\n".join(f" - {summary}" for summary in summaries),
     )
-    completion = text_complete(prompt, completion_prefix='{"detailedSummary": "')
-    return json.loads(completion)
+    return text_complete(
+        prompt, completion_prefix='{"detailedSummary": "', json_decode=True
+    )
 
 
 def remove_sponsers(summary: str) -> str:
     """Remove sponsers from a summary."""
     prompt = prompt_templates.remove_sponsers_from_summary.format(summary=summary)
-    completion = text_complete(prompt, completion_prefix='{"withoutSponsers": "')
-    return json.loads(completion)
+    return text_complete(
+        prompt, completion_prefix='{"withoutSponsers": "', json_decode=True
+    )
 
 
 @retry(n=3)
@@ -114,5 +128,4 @@ def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> 
     completion_prefix = '{"transcript": "' + prompt.rewritten_podcast_first_line.format(
         podcast=podcast, episode_name=episode_name
     )
-    completion = text_complete(prompt, completion_prefix=completion_prefix)
-    return json.loads(completion)
+    return text_complete(prompt, completion_prefix=completion_prefix, json_decode=True)
