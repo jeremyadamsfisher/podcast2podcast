@@ -65,22 +65,19 @@ def summarize_pipeline(
 @retry(n=3)
 def text_complete(
     prompt: str,
-    completion_prefix: str = "",
     model="text-davinci-003",
-    json_decode: bool = False,
 ):
     """Complete text using OpenAI API.
 
     Args:
         prompt (str): Prompt to complete.
-        completion_prefix (str, optional): Prefix to add to output. Defaults to nothing.
         model (str, optional): Model to use. Defaults to "text-davinci-003".
 
     Returns:
         str: Completed text, not including the prompt.
     """
     response = openai.Completion.create(
-        prompt=prompt + completion_prefix,
+        prompt=prompt,
         model=model,
         temperature=0.7,
         max_tokens=256,
@@ -88,14 +85,7 @@ def text_complete(
         frequency_penalty=0,
         presence_penalty=0,
     )
-    completion = completion_prefix + response.choices[0]["text"]
-    if json_decode:
-        try:
-            # JSON parser requires escaped newlines
-            completion = completion.replace("\n", r"\n")
-            completion = json.loads(completion)
-        except json.JSONDecodeError:
-            return Exception("Could not decode JSON: {}".format(completion))
+    completion = response.choices[0]["text"].strip()
     return completion
 
 
@@ -110,26 +100,18 @@ def summarize_summaries(summaries: List[str]) -> str:
     prompt = prompt_templates.summarize_summaries.format(
         summaries="\n".join(f" - {summary}" for summary in summaries),
     )
-    return text_complete(
-        prompt, completion_prefix='{"detailedSummary": "', json_decode=True
-    )
+    return text_complete(prompt)
 
 
 def remove_sponsers(summary: str) -> str:
     """Remove sponsers from a summary."""
     prompt = prompt_templates.remove_sponsers_from_summary.format(summary=summary)
-    return text_complete(
-        prompt, completion_prefix='{"withoutSponsers": "', json_decode=True
-    )
+    return text_complete(prompt)
 
 
 def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
     """Create a new podcast dialog from a summary."""
     prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(
-        show_name=podcast, summary=summary
+        podcast=podcast, summary=summary, episode_name=episode_name
     )
-    first_line = prompt_templates.rewritten_podcast_first_line.format(
-        podcast=podcast, episode_name=episode_name
-    )
-    completion_prefix = '{"transcript": "' + first_line
-    return text_complete(prompt, completion_prefix=completion_prefix, json_decode=True)
+    return text_complete(prompt)

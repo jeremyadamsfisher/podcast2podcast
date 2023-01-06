@@ -11,27 +11,26 @@ Here are a chronological list of descriptions of snippets from a podcast.
 
 {summaries}
 
-Please write a detailed summary from these snippets as a JSON-formatted object.
+Please write a detailed summary from these snippets.
 
-"""
+Detailed summary:"""
 
 remove_sponsers_from_summary = """
 The following is a summary of a podcast.
 
-{summary}
+Summary: {summary}
 
-Please rewrite it to remove mentions of ads, advertisers, sponsors or sponsorships, and output it as a JSON-formatted object.
+Please rewrite it to remove mentions of ads, advertisers, sponsors or sponsorships.
 
-"""
+Rewritten summary:"""
 
 rewrite_as_a_podcast_transcript = """
-The following a summary of a podcast called "{show_name}"
+The following a summary of a podcast called "{podcast}"
 
-{summary}
+Summary: {summary}
 
 Please write a transcript for a show that summarizes this podcast.
 
-"""
+New transcript:
 
-rewritten_podcast_first_line = """
-Welcome back. Today we are summarizing the {podcast}: {episode_name}"""
+Welcome back. Today we are summarizing {podcast}: {episode_name}"""
