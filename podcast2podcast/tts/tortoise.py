@@ -23,7 +23,7 @@ def text2speech_pipeline(
     from tortoise.utils.audio import load_voice
 
     tts = TextToSpeech()
-    mouse_voice_samples, mouse_conditioning_latents = load_voice("mouse")
+    mouse_voice_samples, mouse_conditioning_latents = load_voice("train_mouse")
     speech = tts.tts_with_preset(
         voice_samples=mouse_voice_samples,
         conditioning_latents=mouse_conditioning_latents,
