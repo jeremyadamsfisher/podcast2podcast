@@ -1,8 +1,6 @@
 from typing import Literal
 
 import torchaudio
-from tortoise.api import TextToSpeech
-from tortoise.utils.audio import load_voice
 
 
 def text2speech_pipeline(
@@ -21,6 +19,9 @@ def text2speech_pipeline(
         str: Path to output audio file.
 
     """
+    from tortoise.api import TextToSpeech
+    from tortoise.utils.audio import load_voice
+
     tts = TextToSpeech()
     mouse_voice_samples, mouse_conditioning_latents = load_voice("mouse")
     speech = tts.tts_with_preset(
