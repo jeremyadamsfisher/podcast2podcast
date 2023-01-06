@@ -1,9 +1,11 @@
 from typing import Literal
 
+from podcast2podcast.summarize import summarize_pipeline as summarize
 from podcast2podcast.transcribe import FIVE_MINUTES
+from podcast2podcast.transcribe import transcribe_pipeline as transcribe
+from podcast2podcast.tts.google import text2speech_pipeline as google_tts
+from podcast2podcast.tts.tortoise import text2speech_pipeline as tortoise_tts
 from podcast2podcast.utils import yap
-
-from . import google_tts, summarize, tortoise_tts, transcribe
 
 
 def pipeline(
