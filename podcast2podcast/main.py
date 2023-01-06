@@ -1,10 +1,19 @@
+from typing import Literal
+
 from podcast2podcast.transcribe import FIVE_MINUTES
 from podcast2podcast.utils import yap
 
-from . import summarize, transcribe, google_tts
+from . import google_tts, summarize, tortoise_tts, transcribe
 
 
-def pipeline(url, podcast, episode_name, duration=FIVE_MINUTES, fp_out=None):
+def pipeline(
+    url,
+    podcast,
+    episode_name,
+    duration=FIVE_MINUTES,
+    tts_method: Literal["google", "tortoise"] = "google",
+    fp_out=None,
+):
     """Run the entire pipeline (transcription to spoken output).
 
     Args:
@@ -22,5 +31,6 @@ def pipeline(url, podcast, episode_name, duration=FIVE_MINUTES, fp_out=None):
     with yap(about="creating new dialog"):
         transcript_generated = summarize(transcript_original, podcast, episode_name)
     with yap(about="generating audio"):
+        tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
         mp3_fp = tts(transcript_generated, fp_out=fp_out)
     return mp3_fp

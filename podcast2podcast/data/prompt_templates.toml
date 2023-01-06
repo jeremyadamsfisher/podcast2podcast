@@ -1,5 +1,3 @@
-[prompt_templates]
-
 summarize_snippet = """
 The following is a snippet from a podcast. Please write a concise, one-sentence \
 summary of this snippet.

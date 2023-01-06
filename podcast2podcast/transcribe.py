@@ -4,8 +4,9 @@ from typing import Literal, Optional
 from urllib.parse import urlparse
 
 import whisper
-from podcast2podcast.utils import download_file
 from pydub import AudioSegment
+
+from podcast2podcast.utils import download_file
 
 
 def trim_audio(fp_in, fp_out, duration, format="wav"):

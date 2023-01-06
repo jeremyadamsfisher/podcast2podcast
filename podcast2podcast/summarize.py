@@ -4,9 +4,21 @@ from typing import List
 
 import openai
 import spacy
+import toml
 from loguru import logger
+
 from podcast2podcast.config import settings
 from podcast2podcast.utils import retry
+
+try:
+    import importlib.resources as importlib_resources
+except ModuleNotFoundError:
+    import importlib_resources
+
+from . import data
+
+with importlib_resources.open_text(data, "prompt_templates.toml") as f:
+    prompt_templates = toml.load(f)
 
 
 def summarize_pipeline(
@@ -69,13 +81,13 @@ def text_complete(
 
 def summarize_snippet(snippet: str) -> str:
     """Summarize a snippet of the podcast."""
-    prompt = settings.prompt_templates.summarize_chunk.format(snippet)
+    prompt = prompt_templates.summarize_chunk.format(snippet)
     return text_complete(prompt)
 
 
 def summarize_summaries(summaries: List[str]) -> str:
     """Summarize a list of summaries."""
-    prompt = settings.prompt_templates.summarize_summaries.format(
+    prompt = prompt_templates.summarize_summaries.format(
         summaries="\n".join(f" - {summary}" for summary in summaries),
     )
     completion = text_complete(prompt, completion_prefix='{"detailedSummary": "')
@@ -84,9 +96,7 @@ def summarize_summaries(summaries: List[str]) -> str:
 
 def remove_sponsers(summary: str) -> str:
     """Remove sponsers from a summary."""
-    prompt = settings.prompt_templates.remove_sponsers_from_summary.format(
-        summary=summary
-    )
+    prompt = prompt_templates.remove_sponsers_from_summary.format(summary=summary)
     completion = text_complete(prompt, completion_prefix='{"withoutSponsers": "')
     return json.loads(completion)
 
@@ -94,9 +104,7 @@ def remove_sponsers(summary: str) -> str:
 @retry(n=3)
 def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
     """Create a new podcast dialog from a summary."""
-    prompt = settings.prompt_templates.rewrite_as_a_podcast_transcript.format(
-        summary=summary
-    )
+    prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(summary=summary)
     completion_prefix = '{"transcript": "' + prompt.rewritten_podcast_first_line.format(
         podcast=podcast, episode_name=episode_name
     )

@@ -1,6 +1,6 @@
-import torchaudio
 from typing import Literal
 
+import torchaudio
 from tortoise.api import TextToSpeech
 from tortoise.utils.audio import load_voice
 
