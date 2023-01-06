@@ -1,4 +1,3 @@
-import json
 from pprint import pformat
 from typing import List
 
@@ -66,18 +65,20 @@ def summarize_pipeline(
 def text_complete(
     prompt: str,
     model="text-davinci-003",
+    output_prefix="",
 ):
     """Complete text using OpenAI API.
 
     Args:
         prompt (str): Prompt to complete.
         model (str, optional): Model to use. Defaults to "text-davinci-003".
+        output_prefix (str, optional): Prefix to add to the output. Defaults to "".
 
     Returns:
         str: Completed text, not including the prompt.
     """
     response = openai.Completion.create(
-        prompt=prompt,
+        prompt=prompt + output_prefix,
         model=model,
         temperature=0.7,
         max_tokens=256,
@@ -85,7 +86,7 @@ def text_complete(
         frequency_penalty=0,
         presence_penalty=0,
     )
-    completion = response.choices[0]["text"].strip()
+    completion = output_prefix + response.choices[0]["text"].strip()
     return completion
 
 
@@ -111,7 +112,10 @@ def remove_sponsers(summary: str) -> str:
 
 def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
     """Create a new podcast dialog from a summary."""
+    first_line = prompt_templates.rewrite_as_a_podcast_transcript_first_line.format(
+        podcast=podcast, episode_name=episode_name
+    )
     prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(
         podcast=podcast, summary=summary, episode_name=episode_name
     )
-    return text_complete(prompt)
+    return text_complete(prompt, output_prefix=first_line)

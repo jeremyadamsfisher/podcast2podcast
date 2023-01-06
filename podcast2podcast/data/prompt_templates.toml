@@ -33,4 +33,7 @@ Please write a transcript for a show that summarizes this podcast.
 
 New transcript:
 
+"""
+
+rewrite_as_a_podcast_transcript_first_line = """
 Welcome back. Today we are summarizing {podcast}: {episode_name}"""
