@@ -80,7 +80,7 @@ def text_complete(
         str: Completed text, not including the prompt.
     """
     response = openai.Completion.create(
-        prompt=completion_prefix + prompt,
+        prompt=prompt + completion_prefix,
         model=model,
         temperature=0.7,
         max_tokens=256,
@@ -92,8 +92,12 @@ def text_complete(
     if json_decode:
         try:
             completion = json.loads(completion)
-        except json.JSONDecodeError:
-            raise Exception("Could not decode JSON: `{}`".format(completion))
+        except json.JSONDecodeError as j:
+            e = Exception("Could not decode JSON: `{}`".format(completion))
+            e.response = response
+            e.complete = completion
+            e.j = j
+            raise e
     return completion
 
 

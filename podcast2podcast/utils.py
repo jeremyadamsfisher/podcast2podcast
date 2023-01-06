@@ -33,7 +33,7 @@ def retry(n=3, delay=5):
                 try:
                     return f(*args, **kwargs)
                 except Exception as e:
-                    logger.warning(f"failed `{f.func_name}` on try {i+1}: {e}")
+                    logger.warning(f"failed on try {i+1}: {e}")
                     time.sleep(delay)
                     e_prev = e
             raise e_prev
