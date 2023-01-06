@@ -128,7 +128,9 @@ def remove_sponsers(summary: str) -> str:
 @retry(n=3)
 def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
     """Create a new podcast dialog from a summary."""
-    prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(summary=summary)
+    prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(
+        show_name=podcast, summary=summary
+    )
     completion_prefix = '{"transcript": "' + prompt.rewritten_podcast_first_line.format(
         podcast=podcast, episode_name=episode_name
     )
