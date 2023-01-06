@@ -66,6 +66,7 @@ def text_complete(
     prompt: str,
     model="text-davinci-003",
     output_prefix="",
+    max_tokens=256,
 ):
     """Complete text using OpenAI API.
 
@@ -80,8 +81,8 @@ def text_complete(
     response = openai.Completion.create(
         prompt=prompt + output_prefix,
         model=model,
+        max_tokens=max_tokens,
         temperature=0.7,
-        max_tokens=256,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0,
@@ -118,4 +119,4 @@ def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> 
     prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(
         podcast=podcast, summary=summary, episode_name=episode_name
     )
-    return text_complete(prompt, output_prefix=first_line)
+    return text_complete(prompt, output_prefix=first_line, max_tokens=1000)
