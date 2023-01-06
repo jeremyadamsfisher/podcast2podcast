@@ -62,7 +62,7 @@ def summarize_pipeline(
     return transcript
 
 
-@retry(n=2)
+@retry(n=3)
 def text_complete(
     prompt: str,
     completion_prefix: str = "",
@@ -125,13 +125,13 @@ def remove_sponsers(summary: str) -> str:
     )
 
 
-@retry(n=3)
 def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
     """Create a new podcast dialog from a summary."""
     prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(
         show_name=podcast, summary=summary
     )
-    completion_prefix = '{"transcript": "' + prompt.rewritten_podcast_first_line.format(
+    first_line = prompt_templates.rewritten_podcast_first_line.format(
         podcast=podcast, episode_name=episode_name
     )
+    completion_prefix = '{"transcript": "' + first_line
     return text_complete(prompt, completion_prefix=completion_prefix, json_decode=True)

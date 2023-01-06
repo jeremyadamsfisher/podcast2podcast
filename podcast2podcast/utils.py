@@ -24,7 +24,7 @@ def download_file(url, fp_out):
 
 
 def retry(n=3, delay=5):
-    """Retry a function n times."""
+    """Retry a function n times with exponential backoff."""
 
     def inner(f):
         def wrapper(*args, **kwargs):
@@ -34,7 +34,7 @@ def retry(n=3, delay=5):
                     return f(*args, **kwargs)
                 except Exception as e:
                     logger.warning(f"failed on try {i+1}: {e}")
-                    time.sleep(delay)
+                    time.sleep(delay ** (i + 1))
                     e_prev = e
             raise e_prev
 
