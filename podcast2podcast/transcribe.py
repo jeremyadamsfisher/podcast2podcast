@@ -19,7 +19,8 @@ def trim_audio(fp_in, fp_out, duration, format="wav"):
 
     """
 
-    audio = AudioSegment.from_file(fp_in, format=Path(fp_in).suffix)
+    suffix = Path(fp_in).suffix.replace(".", "")
+    audio = AudioSegment.from_file(fp_in, format=suffix)
     audio[slice(0, duration * 1000)].export(fp_out, format=format)
 
 
