@@ -2,11 +2,11 @@ from pprint import pformat
 from typing import List
 
 import openai
-import spacy
 import toml
 from loguru import logger
 
 from podcast2podcast.config import settings
+from podcast2podcast.nlp import nlp
 from podcast2podcast.utils import retry
 
 try:
@@ -39,7 +39,6 @@ def summarize_pipeline(
     Returns:
         NewPodcastDialogTranscript: The new dialog transcript."""
     openai.api_key = settings.openai_token
-    nlp = spacy.load("en_core_web_sm")
     doc = nlp(transcript)
     sents = [s.text.strip() for s in doc.sents]
 
