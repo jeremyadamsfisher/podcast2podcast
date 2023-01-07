@@ -119,4 +119,4 @@ def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> 
     prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(
         podcast=podcast, summary=summary, episode_name=episode_name
     )
-    return text_complete(prompt, output_prefix=first_line, max_tokens=1000)
+    return text_complete(prompt, output_prefix=first_line, max_tokens=500)

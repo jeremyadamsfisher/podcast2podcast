@@ -3,6 +3,10 @@ from typing import Literal
 import torchaudio
 
 
+class TortoiseFailure(Exception):
+    pass
+
+
 def text2speech_pipeline(
     transcript: str,
     fp_out="./podcast.mp3",
@@ -24,12 +28,16 @@ def text2speech_pipeline(
 
     tts = TextToSpeech()
     mouse_voice_samples, mouse_conditioning_latents = load_voice("train_mouse")
-    speech = tts.tts_with_preset(
-        transcript,
-        preset=preset,
-        voice_samples=mouse_voice_samples,
-        conditioning_latents=mouse_conditioning_latents,
-    )
+    try:
+        speech = tts.tts_with_preset(
+            transcript,
+            preset=preset,
+            voice_samples=mouse_voice_samples,
+            conditioning_latents=mouse_conditioning_latents,
+        )
+    except AssertionError:
+        raise TortoiseFailure("tortoise cannot deal with very long texts")
+
     torchaudio.save(fp_out, speech.squeeze(0).cpu(), 24000)
 
     return fp_out
