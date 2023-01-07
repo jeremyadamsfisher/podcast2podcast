@@ -1,12 +1,15 @@
-def text2speech_pipeline(transcript: str, fp_out="./podcast.mp3"):
+import tempfile
+
+from pydub import AudioSegment
+
+
+def text2speech_pipeline(transcript: str) -> AudioSegment:
     """Convert a transcript to speech.
 
     Args:
         transcript (str): Transcript.
-        fp_out (str, optional): Path to output audio file. Defaults to "./podcast.mp3".
 
     Returns:
-        str: Path to output audio file.
 
     """
 
@@ -22,7 +25,8 @@ def text2speech_pipeline(transcript: str, fp_out="./podcast.mp3"):
         voice=voice,
         audio_config=audio_config,
     )
-    with open(fp_out, "wb") as f:
-        f.write(response.audio_content)
+    with tempfile.NamedTemporaryFile() as t:
+        t.write(response.audio_content)
+        audio = AudioSegment.from_wav(t.name)
 
-    return fp_out
+    return audio

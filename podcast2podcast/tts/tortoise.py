@@ -1,26 +1,43 @@
-from typing import Literal
+from tempfile import NamedTemporaryFile
+from typing import Literal, Tuple
 
 import torchaudio
+from loguru import logger
+from pydub import AudioSegment
+
+from podcast2podcast.nlp import nlp
 
 
 class TortoiseFailure(Exception):
     pass
 
 
+def split_transcript(transcript: str) -> Tuple[str, str]:
+    """Split a transcript into two parts.
+
+    Args:
+        transcript (str): Transcript.
+
+    Returns:
+        Tuple[str, str]: First and second half of transcript.
+    """
+    doc = nlp(transcript)
+    sents = [s.text.strip() for s in doc.sents]
+    return " ".join(sents[: len(sents) // 2]), " ".join(sents[len(sents) // 2 :])
+
+
 def text2speech_pipeline(
     transcript: str,
-    fp_out="./podcast.mp3",
     preset: Literal["ultra_fast", "fast", "standard", "high_quality"] = "high_quality",
-):
+) -> AudioSegment:
     """Convert a transcript to speech.
 
     Args:
         transcript (str): Transcript.
-        fp_out (str, optional): Path to output audio file. Defaults to "./podcast.mp3".
         preset (str, optional): TTS preset. Defaults to "high_quality".
 
     Returns:
-        str: Path to output audio file.
+        AudioSegment: Audio of podcast episode.
 
     """
     from tortoise.api import TextToSpeech
@@ -36,8 +53,15 @@ def text2speech_pipeline(
             conditioning_latents=mouse_conditioning_latents,
         )
     except AssertionError:
-        raise TortoiseFailure("tortoise cannot deal with very long texts")
+        logger.warning(
+            "Tortoise cannot deal with very long texts. "
+            "Rerunning tortoise by combining the result of running it on each sentence."
+        )
+        first_half, second_half = split_transcript(transcript)
+        return text2speech_pipeline(first_half) + text2speech_pipeline(second_half)
 
-    torchaudio.save(fp_out, speech.squeeze(0).cpu(), 24000)
+    with NamedTemporaryFile(suffix=".wav") as t:
+        torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
+        audio = AudioSegment.from_wav(t.name)
 
-    return fp_out
+    return audio

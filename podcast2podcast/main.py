@@ -28,11 +28,17 @@ def pipeline(
     Returns:
         str: Path to output audio file.
     """
+
     with yap(about="transcribing"):
         transcript_original = transcribe(url, duration)
     with yap(about="creating new dialog"):
         transcript_generated = summarize(transcript_original, podcast, episode_name)
     with yap(about="generating audio"):
         tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
-        mp3_fp = tts(transcript_generated, fp_out=fp_out)
-    return mp3_fp
+        audio = tts(transcript_generated)
+
+    if fp_out is None:
+        fp_out = f"./{podcast}_{episode_name}_summary.mp3"
+    audio.export(fp_out, format="mp3")
+
+    return fp_out
