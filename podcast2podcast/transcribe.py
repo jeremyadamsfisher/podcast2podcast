@@ -3,8 +3,8 @@ from tempfile import NamedTemporaryFile as TempFile
 from typing import Literal, Optional
 from urllib.parse import urlparse
 
+import pydub
 import whisper
-from pydub import AudioSegment
 
 from podcast2podcast.utils import download_file
 
@@ -21,7 +21,10 @@ def trim_audio(fp_in, fp_out, duration, format="wav"):
     """
 
     suffix = Path(fp_in).suffix.replace(".", "")
-    audio = AudioSegment.from_file(fp_in, format=suffix)
+    try:
+        audio = pydub.AudioSegment.from_file(fp_in, format=suffix)
+    except pydub.exceptions.CouldntDecodeError:
+        raise ValueError(f"Could not decode {fp_in}. Are you sure it's an audio file?")
     audio[slice(0, duration * 1000)].export(fp_out, format=format)
 
 
