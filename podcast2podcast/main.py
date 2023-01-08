@@ -30,9 +30,9 @@ def pipeline(
     """
 
     with yap(about="transcribing"):
-        transcript_original = transcribe(url, duration)
+        transcript = transcribe(url, duration)
     with yap(about="creating new dialog"):
-        transcript_generated = summarize(transcript_original, podcast, episode_name)
+        transcript_generated = summarize(transcript, podcast, episode_name)
     with yap(about="generating audio"):
         tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
         audio = tts(transcript_generated)
