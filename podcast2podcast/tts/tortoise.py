@@ -8,10 +8,6 @@ from pydub import AudioSegment
 from podcast2podcast.nlp import nlp
 
 
-class TortoiseFailure(Exception):
-    pass
-
-
 def split_transcript(transcript: str) -> Tuple[str, str]:
     """Split a transcript into two parts.
 
@@ -54,8 +50,8 @@ def text2speech_pipeline(
         )
     except AssertionError:
         logger.warning(
-            "Tortoise cannot deal with very long texts. "
-            "Rerunning tortoise by combining the result of running it on each sentence."
+            "Tortoise cannot deal with very long texts. Rerunning tortoise on "
+            "smaller segments of the text and concatenating the results."
         )
         first_half, second_half = split_transcript(transcript)
         return text2speech_pipeline(first_half) + text2speech_pipeline(second_half)
