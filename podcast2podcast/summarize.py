@@ -115,6 +115,7 @@ def remove_sponsers(summary: str) -> str:
     return text_complete(prompt)
 
 
+@retry(n=3)
 def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
     """Create a new podcast dialog from a summary."""
     first_line = prompts.rewrite_as_a_podcast_transcript_first_line.format(
@@ -126,6 +127,6 @@ def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> 
     transcript = text_complete(prompt, output_prefix=first_line, max_tokens=500).strip()
     try:
         (transcript,) = re.match(r'(.*)"}', transcript).groups()
-    except ValueError:
-        raise ValueError("Invalid transcript JSON")
+    except (ValueError, AttributeError):
+        raise ValueError("Invalid transcript JSON: " + transcript)
     return transcript
