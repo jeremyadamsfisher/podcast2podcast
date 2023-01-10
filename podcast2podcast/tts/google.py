@@ -10,7 +10,7 @@ def text2speech_pipeline(transcript: str) -> AudioSegment:
         transcript (str): Transcript.
 
     Returns:
-
+        AudioSegment: Audio of the transcript
     """
 
     from google.cloud import texttospeech as tts
