@@ -31,7 +31,7 @@ def text2speech_pipeline(
     for sentence in nlp(transcript).sents:
         try:
             speech = tts.tts_with_preset(
-                sentence.strip(),
+                sentence.text.strip(),
                 preset=preset,
                 voice_samples=mouse_voice_samples,
                 conditioning_latents=mouse_conditioning_latents,
