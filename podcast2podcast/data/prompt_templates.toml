@@ -25,15 +25,16 @@ Please rewrite it to remove mentions of ads, advertisers, sponsors or sponsorshi
 Rewritten summary:"""
 
 rewrite_as_a_podcast_transcript = """
-The following a summary of a podcast called "{podcast}"
+The following JSON a summary of a podcast called "{podcast}"
 
-Summary: {summary}
+Summary: {{"summary": "{summary}" }}
 
-Please write a transcript for a show that summarizes this podcast.
 
-New transcript:
+Please write a trascript for a talk show where the host, DavidBot, discusses the \
+summary for this podcast. This transcript should be output as a JSON.
 
+New transcript: {{"newTranscript": "\
 """
 
 rewrite_as_a_podcast_transcript_first_line = """
-Welcome back. Today we are summarizing {podcast}: {episode_name}"""
+Welcome back. I'm DavidBot, an A.I. that summarizes podcasts. Today we are summarizing {podcast}: {episode_name}."""

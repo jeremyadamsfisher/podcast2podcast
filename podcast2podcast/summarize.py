@@ -1,3 +1,4 @@
+import re
 from pprint import pformat
 from typing import List
 
@@ -22,8 +23,8 @@ class DotDict:
         self.__dict__.update(d)
 
 
-with importlib_resources.open_text(data, "prompt_templates.toml") as f:
-    prompt_templates = DotDict(toml.load(f))
+with importlib_resources.open_text(data, "prompts.toml") as f:
+    prompts = DotDict(toml.load(f))
 
 
 def summarize_pipeline(
@@ -92,13 +93,13 @@ def text_complete(
 
 def summarize_snippet(snippet: str) -> str:
     """Summarize a snippet of the podcast."""
-    prompt = prompt_templates.summarize_snippet.format(snippet=snippet)
+    prompt = prompts.summarize_snippet.format(snippet=snippet)
     return text_complete(prompt)
 
 
 def summarize_summaries(summaries: List[str]) -> str:
     """Summarize a list of summaries."""
-    prompt = prompt_templates.summarize_summaries.format(
+    prompt = prompts.summarize_summaries.format(
         summaries="\n".join(f" - {summary}" for summary in summaries),
     )
     return text_complete(prompt)
@@ -106,16 +107,21 @@ def summarize_summaries(summaries: List[str]) -> str:
 
 def remove_sponsers(summary: str) -> str:
     """Remove sponsers from a summary."""
-    prompt = prompt_templates.remove_sponsers_from_summary.format(summary=summary)
+    prompt = prompts.remove_sponsers_from_summary.format(summary=summary)
     return text_complete(prompt)
 
 
 def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
     """Create a new podcast dialog from a summary."""
-    first_line = prompt_templates.rewrite_as_a_podcast_transcript_first_line.format(
+    first_line = prompts.rewrite_as_a_podcast_transcript_first_line.format(
         podcast=podcast, episode_name=episode_name
     )
-    prompt = prompt_templates.rewrite_as_a_podcast_transcript.format(
+    prompt = prompts.rewrite_as_a_podcast_transcript.format(
         podcast=podcast, summary=summary, episode_name=episode_name
     )
-    return text_complete(prompt, output_prefix=first_line, max_tokens=500)
+    transcript = text_complete(prompt, output_prefix=first_line, max_tokens=500).strip()
+    try:
+        (transcript,) = re.match(r'(.*)"}').groups()
+    except ValueError:
+        raise ValueError("Invalid transcript JSON")
+    return transcript
