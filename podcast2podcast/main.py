@@ -16,6 +16,7 @@ def pipeline(
     episode_name,
     duration=FIVE_MINUTES,
     tts_method: Literal["google", "tortoise"] = "google",
+    whisper_model_size="medium",
 ) -> AudioSegment:
     """Run the entire pipeline (transcription to spoken output).
 
@@ -24,13 +25,15 @@ def pipeline(
         podcast (str): Podcast name.
         episode_name (str): Episode name.
         duration (int, optional): Duration in seconds. Defaults to the first 5 minutes of the episode.
+        tts_method(str, optional): Text-to-speech method. Defaults to "google".
+        whisper_model_size(str, optional): Model size for the whisper model. Defaults to "medium".
 
     Returns:
         AudioSegment: Audio of podcast episode.
     """
 
     with yap(about="transcribing"):
-        transcript = transcribe(url, duration)
+        transcript = transcribe(url, duration, model_size=whisper_model_size)
     with yap(about="creating new dialog"):
         transcript_generated = summarize(transcript, podcast, episode_name)
     with yap(about="generating audio"):
