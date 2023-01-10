@@ -125,7 +125,7 @@ def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> 
     )
     transcript = text_complete(prompt, output_prefix=first_line, max_tokens=500).strip()
     try:
-        (transcript,) = re.match(r'(.*)"}').groups()
+        (transcript,) = re.match(r'(.*)"}', transcript).groups()
     except ValueError:
         raise ValueError("Invalid transcript JSON")
     return transcript
