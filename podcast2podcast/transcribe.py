@@ -34,7 +34,8 @@ FIVE_MINUTES = 5 * 60
 def transcribe_pipeline(
     url: str,
     duration: Optional[int] = None,
-    model_size: Literal["small", "medium", "large", "base"] = "small",
+    model_size: Literal["small", "medium", "large", "base"] = "medium",
+    model=None,
 ) -> str:
     """Transcribe audio from a given URL.
 
