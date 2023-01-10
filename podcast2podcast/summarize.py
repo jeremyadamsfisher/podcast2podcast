@@ -1,5 +1,5 @@
+import json
 import re
-from pprint import pformat
 from typing import List
 
 import openai
@@ -23,7 +23,7 @@ class DotDict:
         self.__dict__.update(d)
 
 
-with importlib_resources.open_text(data, "prompts.toml") as f:
+with importlib_resources.open_text(data, "prompt_templates.toml") as f:
     prompts = DotDict(toml.load(f))
 
 
@@ -38,27 +38,31 @@ def summarize_pipeline(
         episode_name (str): The name of the episode.
 
     Returns:
-        NewPodcastDialogTranscript: The new dialog transcript."""
+        NewPodcastDialogTranscript: The new dialog transcript.
+    """
+
     openai.api_key = settings.openai_token
     doc = nlp(transcript)
     sents = [s.text.strip() for s in doc.sents]
 
-    logger.debug("transcription: {}", pformat(sents))
-
     snippets = [" ".join(sents[i : i + page]) for i in range(0, len(sents), page)]
     summaries = [summarize_snippet(snippet) for snippet in snippets]
-    logger.debug("summaries: {}", pformat(summaries))
-
     metasummary = summarize_summaries(summaries)
-    logger.debug("metasummary: {}", metasummary)
+    metasummary_wo_sponsers = remove_sponsers(metasummary)
+    new_dialog = create_new_podcast_dialog(
+        metasummary_wo_sponsers, podcast, episode_name
+    )
 
-    metasummary = remove_sponsers(metasummary)
-    logger.debug("metasummary without sponsers: {}", metasummary)
+    log_output = {
+        "original": transcript,
+        "summaries": summaries,
+        "metasummary": metasummary,
+        "metasummary_wo_sponsers": metasummary_wo_sponsers,
+        "new_dialog": new_dialog,
+    }
+    logger.debug("transcription: {}", json.dumps(log_output))
 
-    transcript = create_new_podcast_dialog(metasummary, podcast, episode_name)
-    logger.debug("new podcast dialog: {}", transcript)
-
-    return transcript
+    return new_dialog
 
 
 @retry(n=3)
