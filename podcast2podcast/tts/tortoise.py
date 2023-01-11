@@ -1,7 +1,5 @@
-import math
-import re
 from tempfile import NamedTemporaryFile
-from typing import Callable, List, Literal
+from typing import Literal
 
 import torchaudio
 from pydub import AudioSegment
@@ -9,45 +7,36 @@ from pydub import AudioSegment
 from podcast2podcast.nlp import nlp
 
 
-def chunk_texts_into_reasonable_sizes(
-    texts: List[str], len_acceptable_callable: Callable
-) -> List[str]:
+def break_up_long_sentence(sent: str):
     """Split texts into reasonable sizes.
 
-    Examples:
-        >>> texts = ["This is a very long text, and it is too long for the TTS to handle."]
-        >>> chunk_texts_into_reasonable_sizes(texts, lambda s: 4 < len(s.split(" ")))
-        ["This is a very long text,", "and it is too long for the TTS to handle."]
-
     Args:
-        texts (List[str]): List of texts.
-        len_acceptable_callable (Callable): Callable that returns True if the length of the text is acceptable.
+        sent (str): A potentially long sentence.
+
+    Examples:
+        >>> break_up_long_sentence(
+        >>>     "It was the best of times, it was the worst of times, it was the age of wisdom, "
+        >>>     "it was the age of foolishness, it was the epoch of belief, it was the epoch of "
+        >>>     "incredulity, it was the season of light, it was the season of darkness, it was "
+        >>>     "the spring of hope, it was the winter of despair."
+        >>> )
+        [
+            "It was the best of times, it was the worst of times, it was the age of wisdom,",
+            "it was the age of foolishness, it was the epoch of belief,",
+            "it was the epoch of incredulity, it was the season of light, it was the season of darkness,",
+            "it was the spring of hope, it was the winter of despair."
+        ]
 
     Returns:
-        List[str]: List of texts of reasonable size.
+        List[str]: List of clauses or a sentence of a reasonable size.
     """
-    texts_ = []
-    check_again = False
-    for text in texts:
-        if len_acceptable_callable(text):
-            texts_.append(text)
-        else:
-            check_again = True
-            m = [t for t in re.split(r"(,|;)", text) if t]
-            split_idx = math.ceil((len(m) + 1) / 2)
-            left, right = "".join(m[:split_idx]).strip(), "".join(m[split_idx:]).strip()
-
-            # ensure that the split is not too aggressive
-            if len(left) <= 1 or len(right) <= 1:
-                texts_.append(text)
-            else:
-                texts_.extend([left, right])
-
-    # splitting occured or splitting occured and had no effect
-    if check_again is False or texts_ == texts:
-        return texts_
-
-    return chunk_texts_into_reasonable_sizes(texts_, len_acceptable_callable)
+    sent = sent.strip()
+    if sent.count(" ") < 25:
+        return [sent]
+    clauses = sent.split(",")
+    left = ",".join(clauses[: len(clauses) // 2]).strip() + ","
+    right = ",".join(clauses[len(clauses) // 2 :]).strip()
+    return sum((break_up_long_sentence(s) for s in (left, right)), [])
 
 
 def text2speech_pipeline(
@@ -70,27 +59,23 @@ def text2speech_pipeline(
     tts = TextToSpeech()
     mouse_voice_samples, mouse_conditioning_latents = load_voice("train_mouse")
 
-    text_segments = [sent.text for sent in nlp(transcript).sents]
-    text_segments = chunk_texts_into_reasonable_sizes(
-        text_segments, lambda s: 20 < len(s.split(" "))
-    )
-
     audio_segments = []
-    for sentence in text_segments:
-        try:
-            speech = tts.tts_with_preset(
-                sentence.text.strip(),
-                preset=preset,
-                voice_samples=mouse_voice_samples,
-                conditioning_latents=mouse_conditioning_latents,
-            )
-        except AssertionError:
-            raise ValueError("Tortoise cannot deal with long texts.")
-        else:
-            with NamedTemporaryFile(suffix=".wav") as t:
-                torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
-                segment = AudioSegment.from_wav(t.name)
-                audio_segments.append(segment)
+    for sentence in nlp(transcript).sents:
+        for chunk in break_up_long_sentence(sentence.text):
+            try:
+                speech = tts.tts_with_preset(
+                    chunk,
+                    preset=preset,
+                    voice_samples=mouse_voice_samples,
+                    conditioning_latents=mouse_conditioning_latents,
+                )
+            except AssertionError:
+                raise ValueError("Tortoise cannot deal with long texts.")
+            else:
+                with NamedTemporaryFile(suffix=".wav") as t:
+                    torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
+                    segment = AudioSegment.from_wav(t.name)
+                    audio_segments.append(segment)
 
     audio = sum(audio_segments)
 
