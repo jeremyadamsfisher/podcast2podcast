@@ -27,15 +27,14 @@ with importlib_resources.open_text(data, "prompt_templates.toml") as f:
     prompts = DotDict(toml.load(f))
 
 
-def summarize_pipeline(
-    transcript: str, podcast: str, episode_name: str, page=100
-) -> str:
+def summarize_pipeline(transcript: str, podcast: str, episode: str, page=100) -> str:
     """Create a new dialog transcript from a podcast transcript.
 
     Args:
         transcript (str): The transcript of the podcast episode.
         podcast (str): The name of the podcast.
-        episode_name (str): The name of the episode.
+        episode (str): The name of the episode.
+        page (int): The number of sentences to chunk.
 
     Returns:
         NewPodcastDialogTranscript: The new dialog transcript.
@@ -49,9 +48,7 @@ def summarize_pipeline(
     summaries = [summarize_snippet(snippet) for snippet in snippets]
     metasummary = summarize_summaries(summaries)
     metasummary_wo_sponsers = remove_sponsers(metasummary)
-    new_dialog = create_new_podcast_dialog(
-        metasummary_wo_sponsers, podcast, episode_name
-    )
+    new_dialog = create_new_podcast_dialog(metasummary_wo_sponsers, podcast, episode)
 
     log_output = {
         "original": transcript,
@@ -116,17 +113,17 @@ def remove_sponsers(summary: str) -> str:
 
 
 @retry(n=3)
-def create_new_podcast_dialog(summary: str, podcast: str, episode_name: str) -> str:
+def create_new_podcast_dialog(summary: str, podcast: str, episode: str) -> str:
     """Create a new podcast dialog from a summary."""
     first_line = prompts.rewrite_as_a_podcast_transcript_first_line.format(
-        podcast=podcast, episode_name=episode_name
+        podcast=podcast, episode_name=episode
     )
     prompt = prompts.rewrite_as_a_podcast_transcript.format(
-        podcast=podcast, summary=summary, episode_name=episode_name
+        podcast=podcast, summary=summary, episode_name=episode
     )
     transcript = text_complete(prompt, output_prefix=first_line, max_tokens=500).strip()
     try:
-        (transcript,) = re.match(r'(.*)"}', transcript).groups()
-    except (ValueError, AttributeError):
-        raise ValueError("Invalid transcript JSON: " + transcript)
+        (transcript,) = re.findall(r"^(.*?)\"}", transcript, re.DOTALL)
+    except TypeError:
+        raise ValueError(f"Invalid transcript JSON: {transcript}")
     return transcript
