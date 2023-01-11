@@ -37,4 +37,4 @@ New transcript: {{"newTranscript": "\
 """
 
 rewrite_as_a_podcast_transcript_first_line = """
-Welcome back. I'm DavidBot, an A.I. that summarizes podcasts. Today we are summarizing {podcast}: {episode_name}."""
+Welcome back. I'm DavidBot, an artificial intelligence that summarizes podcasts. Today we are summarizing {podcast}: {episode_name}."""
