@@ -2,6 +2,7 @@ from tempfile import NamedTemporaryFile
 from typing import Literal
 
 import torchaudio
+from loguru import logger
 from pydub import AudioSegment
 
 from podcast2podcast.nlp import nlp
@@ -20,19 +21,16 @@ def break_up_long_sentence(sent: str):
         >>>     "incredulity, it was the season of light, it was the season of darkness, it was "
         >>>     "the spring of hope, it was the winter of despair."
         >>> )
-        [
-            "It was the best of times, it was the worst of times, it was the age of wisdom,",
-            "it was the age of foolishness, it was the epoch of belief,",
-            "it was the epoch of incredulity, it was the season of light, it was the season of darkness,",
-            "it was the spring of hope, it was the winter of despair."
-        ]
+        ["It was the best of times, it was the worst of times, it was the age of wisdom,",
+         "it was the age of foolishness, it was the epoch of belief,",
+         "it was the epoch of incredulity, it was the season of light, it was the season of darkness,",
+         "it was the spring of hope, it was the winter of despair."]
 
     Returns:
         List[str]: List of clauses or a sentence of a reasonable size.
     """
-    sent = sent.strip()
-    if sent.count(" ") < 25:
-        return [sent]
+    if sent.count(" ") < 25 or sent.count(",") == 0:
+        return [sent.strip()]
     clauses = sent.split(",")
     left = ",".join(clauses[: len(clauses) // 2]).strip() + ","
     right = ",".join(clauses[len(clauses) // 2 :]).strip()
@@ -62,6 +60,7 @@ def text2speech_pipeline(
     audio_segments = []
     for sentence in nlp(transcript).sents:
         for chunk in break_up_long_sentence(sentence.text):
+            logger.info("running tts on: {}", chunk)
             try:
                 speech = tts.tts_with_preset(
                     chunk,
