@@ -1,6 +1,7 @@
 from typing import Literal
 
 from pydub import AudioSegment
+from unidecode import unidecode
 
 from podcast2podcast.summarize import summarize_pipeline as summarize
 from podcast2podcast.transcribe import FIVE_MINUTES
@@ -37,6 +38,7 @@ def pipeline(
     with yap(about="creating new dialog"):
         transcript_generated = summarize(transcript, podcast, episode_name)
     with yap(about="generating audio"):
+        transcript_generated = unidecode(transcript_generated)
         tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
         audio = tts(transcript_generated)
 

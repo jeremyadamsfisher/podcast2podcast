@@ -9,6 +9,7 @@ requirements = [
     "loguru",
     "spacy",
     "openai",
+    "Unidecode",
     "pydub",
     "google-cloud-texttospeech",
     "whisper @ git+https://github.com/openai/whisper.git#egg=whisper",
