@@ -1,6 +1,6 @@
 # Podcast2Podcast
 
-<a target="_blank" href="">
+<a target="_blank" href="https://colab.research.google.com/github/jeremyadamsfisher/podcast2podcast/blob/main/podcast2podcast.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
