@@ -1,3 +1,5 @@
+import io
+from contextlib import redirect_stdout
 from typing import Literal
 
 from pydub import AudioSegment
@@ -33,13 +35,15 @@ def pipeline(
         AudioSegment: Audio of podcast episode.
     """
 
-    with yap(about="transcribing"):
-        transcript = transcribe(url, duration, model_size=whisper_model_size)
-    with yap(about="creating new dialog"):
-        transcript_generated = summarize(transcript, podcast, episode_name)
-    with yap(about="generating audio"):
-        transcript_generated = unidecode(transcript_generated)
-        tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
-        audio = tts(transcript_generated)
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        with yap(about="transcribing"):
+            transcript = transcribe(url, duration, model_size=whisper_model_size)
+        with yap(about="creating new dialog"):
+            transcript_generated = summarize(transcript, podcast, episode_name)
+        with yap(about="generating audio"):
+            transcript_generated = unidecode(transcript_generated)
+            tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
+            audio = tts(transcript_generated)
 
     return audio
