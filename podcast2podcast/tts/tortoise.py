@@ -68,12 +68,12 @@ def tts(
             try:
                 buffer = io.StringIO()
                 with redirect_stdout(buffer):
-                speech = tts.tts_with_preset(
-                    chunk,
-                    preset=preset,
-                    voice_samples=mouse_voice_samples,
-                    conditioning_latents=mouse_conditioning_latents,
-                )
+                    speech = tts.tts_with_preset(
+                        chunk,
+                        preset=preset,
+                        voice_samples=mouse_voice_samples,
+                        conditioning_latents=mouse_conditioning_latents,
+                    )
             except AssertionError:
                 raise ValueError("Tortoise cannot deal with long texts.")
             with NamedTemporaryFile(suffix=".wav") as t:
