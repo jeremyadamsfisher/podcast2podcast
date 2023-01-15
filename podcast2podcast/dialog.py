@@ -48,9 +48,9 @@ def new_dialog(podcast_title, episode_title, description) -> str:
 
     openai.api_key = settings.openai_token
     summary = text_complete(SUMMARIZE.format(description))
-    first_line = FIRST_LINE.format(podcast_title, episode_title)
     return text_complete(
-        REWRITE.format(summary=summary, podcast_title=podcast_title) + first_line
+        REWRITE.format(podcast_title, summary)
+        + FIRST_LINE.format(podcast_title, episode_title)
     )
 
 
@@ -58,7 +58,6 @@ def new_dialog(podcast_title, episode_title, description) -> str:
 def text_complete(
     prompt: str,
     model="text-davinci-003",
-    output_prefix="",
     max_tokens=256,
     json_capture=True,
 ):
@@ -67,7 +66,6 @@ def text_complete(
     Args:
         prompt (str): Prompt to complete.
         model (str, optional): Model to use. Defaults to "text-davinci-003".
-        output_prefix (str, optional): Prefix to add to the output. Defaults to "".
         max_tokens (int, optional): Maximum number of tokens to generate. Defaults to 256.
         json_capture (bool, optional): Whether to parse outputs as a JSON. Defaults to True.
 
@@ -76,7 +74,7 @@ def text_complete(
 
     """
     response = openai.Completion.create(
-        prompt=prompt + output_prefix,
+        prompt=prompt,
         model=model,
         max_tokens=max_tokens,
         temperature=0.7,
@@ -84,7 +82,7 @@ def text_complete(
         frequency_penalty=0,
         presence_penalty=0,
     )
-    completion = output_prefix + response.choices[0]["text"].strip()
+    completion = response.choices[0]["text"].strip()
     if json_capture:
         try:
             (completion,) = re.findall(r"^(.*?)\"}", completion, re.DOTALL)

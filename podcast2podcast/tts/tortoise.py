@@ -3,11 +3,12 @@ from contextlib import redirect_stdout
 from tempfile import NamedTemporaryFile
 from typing import Literal
 
+import spacy
 import torchaudio
 from loguru import logger
 from pydub import AudioSegment
 
-from podcast2podcast.nlp import nlp
+nlp = spacy.load("en_core_web_sm")
 
 
 def break_up_long_sentence(sent: str):
