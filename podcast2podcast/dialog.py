@@ -1,26 +1,36 @@
 import re
 
 import openai
-import toml
 
 from podcast2podcast.config import settings
 from podcast2podcast.utils import retry
 
-try:
-    import importlib.resources as importlib_resources
-except ModuleNotFoundError:
-    import importlib_resources
+SUMMARIZE = """\
+The following is the description of a podcast episode. 
 
-from . import data
+{{"description": "{}"}}
 
+Please write a concise summary of this podcast as a JSON.
 
-class DotDict:
-    def __init__(self, d):
-        self.__dict__.update(d)
+{{"summary": "\
+"""
 
+REWRITE = """\
+The following JSON is a summary of a podcast called "{}"
 
-with importlib_resources.open_text(data, "prompt_templates.toml") as f:
-    prompts = DotDict(toml.load(f))
+{{"summary": "{}"}}
+
+Please write the dialog for a talk show that discusses this podcast. The host 
+of the podcast is "Jeremy-Bot." Respond with JSON. Make sure to end with the 
+tagline: "That's all for today. Join us next time for another exciting summary"
+
+{{"newTranscript": "\
+"""
+
+FIRST_LINE = """\
+Welcome back. I'm Jeremy-Bot, an artificial intelligence that summarizes \
+podcasts. Today we are summarizing {}: {}.\
+"""
 
 
 def new_dialog(podcast_title, episode_title, description) -> str:
@@ -37,10 +47,10 @@ def new_dialog(podcast_title, episode_title, description) -> str:
     """
 
     openai.api_key = settings.openai_token
-    summary = text_complete(prompts.summarize(description=description))
-    first_line = prompts.first_line.format(podcast_title, episode_title)
+    summary = text_complete(SUMMARIZE.format(description))
+    first_line = FIRST_LINE.format(podcast_title, episode_title)
     return text_complete(
-        prompts.rewrite(summary=summary, podcast_title=podcast_title) + first_line,
+        REWRITE.format(summary=summary, podcast_title=podcast_title) + first_line
     )
 
 

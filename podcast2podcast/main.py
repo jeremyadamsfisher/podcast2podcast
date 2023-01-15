@@ -1,5 +1,3 @@
-import io
-from contextlib import redirect_stdout
 from typing import TYPE_CHECKING, Literal
 
 from podcast2podcast.dialog import new_dialog
@@ -28,13 +26,11 @@ def pipeline(
         AudioSegment: Audio of podcast episode.
 
     """
-    buffer = io.StringIO()
-    with redirect_stdout(buffer):
-        with yap(about="getting podcast information"):
-            details = get_podcast_details(url, episode_idx)
-        with yap(about="creating new dialog"):
-            transcript = new_dialog(*details)
-        with yap(about="generating audio"):
-            tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
-            audio = tts(transcript)
+    with yap(about="getting podcast information"):
+        details = get_podcast_details(url, episode_idx)
+    with yap(about="creating new dialog"):
+        transcript = new_dialog(*details)
+    with yap(about="generating audio"):
+        tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
+        audio = tts(transcript)
     return audio

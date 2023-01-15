@@ -1,3 +1,5 @@
+import io
+from contextlib import redirect_stdout
 from tempfile import NamedTemporaryFile
 from typing import Literal
 
@@ -63,6 +65,8 @@ def tts(
         for chunk in break_up_long_sentence(sentence.text):
             logger.info("running tts on: {}", chunk)
             try:
+                buffer = io.StringIO()
+                with redirect_stdout(buffer):
                 speech = tts.tts_with_preset(
                     chunk,
                     preset=preset,
