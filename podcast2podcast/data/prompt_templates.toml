@@ -1,14 +1,14 @@
-summarize = """\
+summarize = """
 The following is the description of a podcast episode. 
 
 {{"description": "{description}"}}
 
 Please write a concise summary of this podcast as a JSON.
 
-{{"summary":\
+{{"summary": "\
 """
 
-rewrite = """\
+rewrite = """
 The following JSON is a summary of a podcast called "{podcast_title}"
 
 {{"summary": "{summary}"}}
