@@ -49,8 +49,8 @@ def new_dialog(podcast_title, episode_title, description) -> str:
     openai.api_key = settings.openai_token
     summary = text_complete(SUMMARIZE.format(description))
     return text_complete(
-        REWRITE.format(podcast_title, summary)
-        + FIRST_LINE.format(podcast_title, episode_title)
+        REWRITE.format(podcast_title, summary),
+        output_prefix=FIRST_LINE.format(podcast_title, episode_title),
     )
 
 
@@ -60,6 +60,7 @@ def text_complete(
     model="text-davinci-003",
     max_tokens=256,
     json_capture=True,
+    output_prefix="",
 ):
     """Complete text using OpenAI API.
 
@@ -68,13 +69,14 @@ def text_complete(
         model (str, optional): Model to use. Defaults to "text-davinci-003".
         max_tokens (int, optional): Maximum number of tokens to generate. Defaults to 256.
         json_capture (bool, optional): Whether to parse outputs as a JSON. Defaults to True.
+        output_prefix (str, optional): Prefix to add to the output. Defaults to "".
 
     Returns:
         str: Completed text, not including the prompt.
 
     """
     response = openai.Completion.create(
-        prompt=prompt,
+        prompt=prompt + output_prefix,
         model=model,
         max_tokens=max_tokens,
         temperature=0.7,
@@ -82,7 +84,7 @@ def text_complete(
         frequency_penalty=0,
         presence_penalty=0,
     )
-    completion = response.choices[0]["text"].strip()
+    completion = output_prefix + response.choices[0]["text"].strip()
     if json_capture:
         try:
             (completion,) = re.findall(r"^(.*?)\"}", completion, re.DOTALL)

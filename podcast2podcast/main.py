@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Literal
 
+from loguru import logger
+
 from podcast2podcast.dialog import new_dialog
 from podcast2podcast.rss import get_podcast_details
 from podcast2podcast.tts.google import tts as google_tts
@@ -30,6 +32,7 @@ def pipeline(
         details = get_podcast_details(url, episode_idx)
     with yap(about="creating new dialog"):
         transcript = new_dialog(*details)
+        logger.info("Transcript: {}", transcript")
     with yap(about="generating audio"):
         tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
         audio = tts(transcript)

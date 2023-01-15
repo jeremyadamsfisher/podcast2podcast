@@ -1,5 +1,3 @@
-import io
-from contextlib import redirect_stdout
 from tempfile import NamedTemporaryFile
 from typing import Literal
 
@@ -55,6 +53,8 @@ def tts(
         AudioSegment: Audio of podcast episode.
 
     """
+
+    # importing here to avoid doing so if using WaveNet
     from tortoise.api import TextToSpeech
     from tortoise.utils.audio import load_voice
 
@@ -66,14 +66,12 @@ def tts(
         for chunk in break_up_long_sentence(sentence.text):
             logger.info("running tts on: {}", chunk)
             try:
-                buffer = io.StringIO()
-                with redirect_stdout(buffer):
-                    speech = tts.tts_with_preset(
-                        chunk,
-                        preset=preset,
-                        voice_samples=mouse_voice_samples,
-                        conditioning_latents=mouse_conditioning_latents,
-                    )
+                speech = tts.tts_with_preset(
+                    chunk,
+                    preset=preset,
+                    voice_samples=mouse_voice_samples,
+                    conditioning_latents=mouse_conditioning_latents,
+                )
             except AssertionError:
                 raise ValueError("Tortoise cannot deal with long texts.")
             with NamedTemporaryFile(suffix=".wav") as t:
