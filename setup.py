@@ -3,16 +3,16 @@ import sys
 from setuptools import find_packages, setup
 
 requirements = [
-    "toml",
-    "dynaconf",
-    "tqdm",
-    "loguru",
-    "spacy",
-    "openai",
     "Unidecode",
-    "pydub",
+    "dynaconf",
     "google-cloud-texttospeech",
-    "whisper @ git+https://github.com/openai/whisper.git#egg=whisper",
+    "loguru",
+    "openai",
+    "pydub",
+    "spacy",
+    "toml",
+    "tqdm",
+    "untangle",
 ]
 
 if sys.version_info < (3, 9):

@@ -28,6 +28,7 @@ def break_up_long_sentence(sent: str):
 
     Returns:
         List[str]: List of clauses or a sentence of a reasonable size.
+
     """
     if sent.count(" ") < 25 or sent.count(",") == 0:
         return [sent.strip()]
@@ -37,7 +38,7 @@ def break_up_long_sentence(sent: str):
     return sum((break_up_long_sentence(s) for s in (left, right)), [])
 
 
-def text2speech_pipeline(
+def tts(
     transcript: str,
     preset: Literal["ultra_fast", "fast", "standard", "high_quality"] = "high_quality",
 ) -> AudioSegment:
@@ -70,11 +71,10 @@ def text2speech_pipeline(
                 )
             except AssertionError:
                 raise ValueError("Tortoise cannot deal with long texts.")
-            else:
-                with NamedTemporaryFile(suffix=".wav") as t:
-                    torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
-                    segment = AudioSegment.from_wav(t.name)
-                    audio_segments.append(segment)
+            with NamedTemporaryFile(suffix=".wav") as t:
+                torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
+                segment = AudioSegment.from_wav(t.name)
+                audio_segments.append(segment)
 
     audio = sum(audio_segments)
 
