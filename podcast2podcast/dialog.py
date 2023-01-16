@@ -8,7 +8,7 @@ from podcast2podcast.utils import retry
 SUMMARIZE = """\
 The following is the description of a podcast episode. 
 
-{{"description": "{}"}}
+Description: {}
 
 Please write a concise summary of this podcast as a JSON.
 
@@ -18,13 +18,11 @@ Please write a concise summary of this podcast as a JSON.
 REWRITE = """\
 The following JSON is a summary of a podcast called "{}"
 
-{{"summary": "{}"}}
+Summary: {}
 
-Please write the dialog for a talk show that discusses this podcast. The host 
-of the podcast is "Jeremy-Bot." Respond with JSON. Make sure to end with the 
-tagline: "That's all for today. Join us next time for another exciting summary"
+Please write the dialog for a talk show that discusses this podcast. The host of the podcast is "Jeremy-Bot." Respond with JSON. Make sure to end with the tagline: "That's all for today. Join us next time for another exciting summary"
 
-{{"newTranscript": "\
+{{"dialog": "\
 """
 
 FIRST_LINE = """\
@@ -88,6 +86,6 @@ def text_complete(
     if json_capture:
         try:
             (completion,) = re.findall(r"^(.*?)\"}", completion, re.DOTALL)
-        except TypeError:
+        except (ValueError, TypeError):
             raise ValueError(f"Invalid JSON: {completion}")
     return completion
