@@ -1,3 +1,4 @@
+import json
 import re
 
 import openai
@@ -11,8 +12,6 @@ The following is the description of a podcast episode.
 Description: {}
 
 Please write a concise summary of this podcast as a JSON.
-
-{{"summary": "\
 """
 
 REWRITE = """\
@@ -20,9 +19,7 @@ The following JSON is a summary of a podcast called "{}"
 
 Summary: {}
 
-Please write the dialog for a talk show that discusses this podcast. The host of the podcast is "Jeremy-Bot." Respond with JSON. Make sure to end with the tagline: "That's all for today. Join us next time for another exciting summary"
-
-{{"dialog": "\
+Please write the dialog for a talk show that discusses this podcast. The host of the podcast is "Jeremy-Bot." Respond with JSON with the key "dialog". Make sure to end with the tagline: "That's all for today. Join us next time for another exciting summary"\
 """
 
 FIRST_LINE = """\
@@ -43,30 +40,29 @@ def new_dialog(podcast_title, episode_title, description) -> str:
         str: The new dialog transcript.
 
     """
-
     openai.api_key = settings.openai_token
-    summary = text_complete(SUMMARIZE.format(description))
-    return text_complete(
+    summary = json_complete(SUMMARIZE.format(description), key="summary")
+    return json_complete(
         REWRITE.format(podcast_title, summary),
         output_prefix=FIRST_LINE.format(podcast_title, episode_title),
+        key="dialog",
     )
 
 
-@retry(n=3)
+@retry(n=3, delay=10)
 def text_complete(
     prompt: str,
     model="text-davinci-003",
     max_tokens=256,
-    json_capture=True,
     output_prefix="",
-):
+) -> str:
     """Complete text using OpenAI API.
 
     Args:
         prompt (str): Prompt to complete.
         model (str, optional): Model to use. Defaults to "text-davinci-003".
         max_tokens (int, optional): Maximum number of tokens to generate. Defaults to 256.
-        json_capture (bool, optional): Whether to parse outputs as a JSON. Defaults to True.
+        json_capture (bool, optional): Whether to parse outputs as a JSON. Defaults to False.
         output_prefix (str, optional): Prefix to add to the output. Defaults to "".
 
     Returns:
@@ -82,10 +78,35 @@ def text_complete(
         frequency_penalty=0,
         presence_penalty=0,
     )
-    completion = output_prefix + response.choices[0]["text"].strip()
-    if json_capture:
-        try:
-            (completion,) = re.findall(r"^(.*?)\"}", completion, re.DOTALL)
-        except (ValueError, TypeError):
-            raise ValueError(f"Invalid JSON: {completion}")
+    return output_prefix + response.choices[0]["text"].strip()
+
+
+def json_complete(
+    key: str, prompt: str, model="text-davinci-003", max_tokens=256, output_prefix=""
+) -> str:
+    """Complete text using OpenAI API, evoking JSON outputs from the model to
+    know what part of the output is relevant.
+
+    Args:
+        key (str): Key to extract from JSON from GPT3.
+        *args, **kwargs: Arguments to pass to text_complete.
+
+    Returns:
+        str: Completed text, not including the prompt.
+
+    """
+    json_start = f'{{"{key}": "'  # e.g., '{"summary": "'
+    if output_prefix:
+        json_start += " " + output_prefix
+    completion = text_complete(
+        prompt,
+        model,
+        max_tokens,
+        output_prefix=json_start,
+    )
+    try:
+        (completion,) = re.findall(r"^({\".*?\"})", completion, re.DOTALL)
+        completion = json.loads(completion.replace("\n", r"\n"))[key]
+    except (ValueError, json.JSONDecodeError):
+        raise ValueError(f"Invalid JSON: {completion}")
     return completion
