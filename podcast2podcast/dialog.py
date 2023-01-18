@@ -106,7 +106,10 @@ def json_complete(
     )
     try:
         (completion,) = re.findall(r"^({\".*?\"})", completion, re.DOTALL)
-        completion = json.loads(completion.replace("\n", r"\n"))[key]
-    except (ValueError, json.JSONDecodeError):
+    except ValueError:
         raise ValueError(f"Invalid JSON: {completion}")
+    try:
+        completion = json.loads(completion.replace("\n", r"\n"))[key]
+    except json.JSONDecodeError:
+        raise json.JSONDecodeError(f"Invalid JSON: {completion}")
     return completion
