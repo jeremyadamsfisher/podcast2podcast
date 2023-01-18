@@ -49,7 +49,6 @@ def new_dialog(podcast_title, episode_title, description) -> str:
     )
 
 
-@retry(n=3, delay=10)
 def text_complete(
     prompt: str,
     model="text-davinci-003",
@@ -81,6 +80,7 @@ def text_complete(
     return output_prefix + response.choices[0]["text"].strip()
 
 
+@retry(n=3, delay=10)
 def json_complete(
     key: str, prompt: str, model="text-davinci-003", max_tokens=256, output_prefix=""
 ) -> str:
