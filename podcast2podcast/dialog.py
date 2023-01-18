@@ -41,9 +41,9 @@ def new_dialog(podcast_title, episode_title, description) -> str:
 
     """
     openai.api_key = settings.openai_token
-    summary = json_complete(SUMMARIZE.format(description), key="summary")
+    summary = json_complete(prompt=SUMMARIZE.format(description), key="summary")
     return json_complete(
-        REWRITE.format(podcast_title, summary),
+        prompt=REWRITE.format(podcast_title, summary),
         output_prefix=FIRST_LINE.format(podcast_title, episode_title),
         key="dialog",
     )
