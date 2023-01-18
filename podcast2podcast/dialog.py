@@ -19,7 +19,7 @@ The following JSON is a summary of a podcast called "{}"
 
 Summary: {}
 
-Please write the dialog for a talk show that discusses this podcast. The host of the podcast is "Jeremy-Bot." Respond with JSON with the key "dialog". Make sure to end with the tagline: "That's all for today. Join us next time for another exciting summary"\
+Please write the dialog for a talk show that discusses this podcast. The host of the podcast is "Jeremy-Bot." There are no other guests. Respond with JSON with the key "dialog". Make sure to end with the tagline: "That's all for today. Join us next time for another exciting summary"\
 """
 
 FIRST_LINE = """\
