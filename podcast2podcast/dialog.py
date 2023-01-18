@@ -1,7 +1,9 @@
 import json
 import re
+from typing import Callable, Optional
 
 import openai
+from loguru import logger
 
 from podcast2podcast.config import settings
 from podcast2podcast.utils import retry
@@ -28,6 +30,19 @@ podcasts. Today we are summarizing {}: {}.\
 """
 
 
+def attempt_to_salvage_dialog_that_is_slightly_too_long(dialog):
+    pat = r"(that'?s all for today.*$)"
+    if re.findall(pat, dialog, flags=re.IGNORECASE):
+        return re.sub(
+            pat,
+            "That's all for today. Join us next time for another exciting summary.\"}",
+            dialog,
+            flags=re.IGNORECASE,
+        )
+    else:
+        raise ValueError(f"Can't salvage dialog that is too long: `{dialog}`")
+
+
 def new_dialog(podcast_title, episode_title, description) -> str:
     """Create a new dialog transcript from a podcast transcript.
 
@@ -46,6 +61,7 @@ def new_dialog(podcast_title, episode_title, description) -> str:
         prompt=REWRITE.format(podcast_title, summary),
         output_prefix=FIRST_LINE.format(podcast_title, episode_title),
         key="dialog",
+        attempt_fix=attempt_to_salvage_dialog_that_is_slightly_too_long,
     )
 
 
@@ -82,7 +98,12 @@ def text_complete(
 
 @retry(n=3, delay=10)
 def json_complete(
-    key: str, prompt: str, model="text-davinci-003", max_tokens=256, output_prefix=""
+    key: str,
+    prompt: str,
+    model="text-davinci-003",
+    max_tokens=256,
+    output_prefix="",
+    attempt_fix: Optional[Callable] = None,
 ) -> str:
     """Complete text using OpenAI API, evoking JSON outputs from the model to
     know what part of the output is relevant.
@@ -107,7 +128,12 @@ def json_complete(
     try:
         (completion,) = re.findall(r"^({\".*?\"})", completion, re.DOTALL)
     except ValueError:
-        raise ValueError(f"Invalid JSON: {completion}")
+        logger.warning(f"Invalid JSON: {completion}. Attempting to fix...")
+        completion = attempt_fix(completion)
+        try:
+            (completion,) = re.findall(r"^({\".*?\"})", completion, re.DOTALL)
+        except ValueError:
+            raise ValueError(f"Invalid JSON: {completion}")
     try:
         completion = json.loads(completion.replace("\n", r"\n"))[key]
     except json.JSONDecodeError:
