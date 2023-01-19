@@ -53,6 +53,8 @@ def new_dialog(podcast_title, episode_title, description) -> str:
     """
     openai.api_key = settings.openai_token
 
+    logger.info("Description: {}", description)
+
     summary = generate_summary(description)
     dialog = generate_dialog(summary, podcast_title, episode_title)
 
