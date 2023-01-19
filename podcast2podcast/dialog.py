@@ -71,6 +71,7 @@ def generate_summary(description: str) -> str:
         str: The summary.
 
     """
+    description = re.sub(r"\n*", " ", description)
     summary = json_complete(prompt=SUMMARIZE.format(description), key="summary")
     logger.info("Summary: {}", summary)
     return summary
