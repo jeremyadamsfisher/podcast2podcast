@@ -48,8 +48,8 @@ def parse_rss(rss_url: str) -> Tuple[str, List[Tuple[str, str]]]:
         episodes = []
         for e in xml.rss.channel.item:
             title = unidecode(e.title.cdata)
-            link = unidecode(e.link.cdata)
-            episodes.append((title, link))
+            description = TagStripper.from_html(unidecode(e.description.cdata))
+            episodes.append((title, description))
     except (SAXParseException, AttributeError):
         raise ValueError(f"Could not parse {rss_url}")
 
