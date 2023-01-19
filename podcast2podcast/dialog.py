@@ -17,30 +17,26 @@ Please write a concise summary of this podcast as a JSON.
 """
 
 REWRITE = """\
-The following JSON is a summary of a podcast called "{}"
+Please write dialog for a talk show where the host, "JeremyBot," discusses and summarizes a podcast. There are no guests on this show. Respond with JSON and make sure to end with the tagline: "That's all for today. Join us next time for another exciting summary."
+
+For example, consider the following summary.
+
+Summary: This week on the Slate Gabfest, David Plotz, Emily Bazelon, and John Dickerson discuss the House GOP's "Weaponization of Government" subcommittee, the insurrection in Brazil, Prince Harry's book "Spare", and the status of "return to office". They also provide references and chatters from John, Emily, David, and a listener.
+
+For that summary, you could write the following:
+
+{{"dialog": "Welcome! Today we are summarizing The Slate Political Gabfest. On this episode, David Plotz, Emily Bazelon, and John Dickerson discuss the House GOP's 'Weaponization of Government' subcommittee, the insurrection in Brazil, Prince Harry's book 'Spare', and the status of 'return to office'. They also provide references and chatters from John, Emily, David, and a listener. That's all for today. Join us next time for another exciting summary."}}
+
+In this case, summarize {}:
 
 Summary: {}
 
-Please write the dialog for a talk show that discusses this podcast. The host of the podcast is "Jeremy-Bot." There are no other guests. Respond with JSON with the key "dialog". Make sure to end with the tagline: "That's all for today. Join us next time for another exciting summary"\
 """
 
 FIRST_LINE = """\
 Welcome back. I'm Jeremy-Bot, an artificial intelligence that summarizes \
 podcasts. Today we are summarizing {}: {}.\
 """
-
-
-def attempt_to_salvage_dialog_that_is_slightly_too_long(dialog):
-    pat = r"(that'?s all for today.*$)"
-    if re.findall(pat, dialog, flags=re.IGNORECASE):
-        return re.sub(
-            pat,
-            "That's all for today. Join us next time for another exciting summary.\"}",
-            dialog,
-            flags=re.IGNORECASE,
-        )
-    else:
-        raise ValueError(f"Can't salvage dialog that is too long: `{dialog}`")
 
 
 def new_dialog(podcast_title, episode_title, description) -> str:
@@ -56,13 +52,66 @@ def new_dialog(podcast_title, episode_title, description) -> str:
 
     """
     openai.api_key = settings.openai_token
+
+    summary = generate_summary(description)
+    dialog = generate_dialog(summary, podcast_title, episode_title)
+
+    return dialog
+
+
+def generate_summary(description: str) -> str:
+    """Summarize a podcast description.
+
+    Args:
+        description (str): The podcast description.
+
+    Returns:
+        str: The summary.
+
+    """
     summary = json_complete(prompt=SUMMARIZE.format(description), key="summary")
-    return json_complete(
-        prompt=REWRITE.format(podcast_title, summary),
-        output_prefix=FIRST_LINE.format(podcast_title, episode_title),
+    logger.info("Summary: {}", summary)
+    return summary
+
+
+def generate_dialog(summary: str, podcast_title: str, episode_title: str) -> str:
+    """Generate dialog from a podcast summary.
+
+    Args:
+        summary (str): The podcast summary.
+        podcast_title (str): The podcast title.
+        episode_title (str): The episode title.
+
+    Returns:
+        str: The dialog.
+
+    """
+    summary = re.sub(r"\n*", " ", summary)
+    if not (
+        podcast_title.lower().startswith("the") or podcast_title.lower().startswith("a")
+    ):
+        podcast_title = "the " + podcast_title
+    dialog = json_complete(
+        prompt=REWRITE.format(podcast_title.title(), summary),
+        output_prefix=FIRST_LINE.format(podcast_title.title(), episode_title.title()),
         key="dialog",
         attempt_fix=attempt_to_salvage_dialog_that_is_slightly_too_long,
     )
+    logger.info("Dialog: {}", dialog)
+    return dialog
+
+
+def attempt_to_salvage_dialog_that_is_slightly_too_long(dialog):
+    pat = r"(that'?s all for today.*$)"
+    if re.findall(pat, dialog, flags=re.IGNORECASE):
+        return re.sub(
+            pat,
+            "That's all for today. Join us next time for another exciting summary.\"}",
+            dialog,
+            flags=re.IGNORECASE,
+        )
+    else:
+        raise ValueError(f"Can't salvage dialog that is too long: `{dialog}`")
 
 
 def text_complete(
@@ -96,6 +145,26 @@ def text_complete(
     return output_prefix + response.choices[0]["text"].strip()
 
 
+def extract_from_curly_brackets(s: str) -> str:
+    """Extract text from curly brackets.
+
+    Args:
+        s (str): String to extract from.
+
+    Raises:
+        ValueError: If there is not exactly one match.
+
+    Returns:
+        str: Extracted text.
+
+    """
+    try:
+        (extraction,) = re.findall(r"{(.*)}", s)
+    except ValueError:
+        raise ValueError(f"None or too many curly brackets : {s}")
+    return extraction
+
+
 @retry(n=3, delay=10)
 def json_complete(
     key: str,
@@ -111,6 +180,7 @@ def json_complete(
     Args:
         key (str): Key to extract from JSON from GPT3.
         *args, **kwargs: Arguments to pass to text_complete.
+        attempt_fix (Callable, optional): Function to attempt to fix the JSON if it is invalid. Defaults to None.
 
     Returns:
         str: Completed text, not including the prompt.
@@ -126,14 +196,13 @@ def json_complete(
         output_prefix=json_start,
     )
     try:
-        (completion,) = re.findall(r"^({\".*?\"})", completion, re.DOTALL)
-    except ValueError:
+        completion = extract_from_curly_brackets(completion)
+    except ValueError as e:
+        if attempt_fix is None:
+            raise e
         logger.warning(f"Invalid JSON: {completion}. Attempting to fix...")
         completion = attempt_fix(completion)
-        try:
-            (completion,) = re.findall(r"^({\".*?\"})", completion, re.DOTALL)
-        except ValueError:
-            raise ValueError(f"Invalid JSON: {completion}")
+        completion = extract_from_curly_brackets(completion)
     try:
         completion = json.loads(completion.replace("\n", r"\n"))[key]
     except json.JSONDecodeError:
