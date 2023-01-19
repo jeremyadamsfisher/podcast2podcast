@@ -34,7 +34,7 @@ Summary: {}
 """
 
 FIRST_LINE = """\
-Welcome back. I'm Jeremy-Bot, an artificial intelligence that summarizes \
+Welcome back. I'm JeremyBot, an artificial intelligence that summarizes \
 podcasts. Today we are summarizing {}: {}.\
 """
 
