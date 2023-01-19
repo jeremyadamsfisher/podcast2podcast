@@ -207,6 +207,6 @@ def json_complete(
         completion = extract_from_curly_brackets(completion)
     try:
         completion = json.loads(completion.replace("\n", r"\n"))[key]
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, TypeError):
         raise json.JSONDecodeError(f"Invalid JSON: {completion}")
     return completion
