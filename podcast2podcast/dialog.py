@@ -161,7 +161,7 @@ def extract_from_curly_brackets(s: str) -> str:
 
     """
     try:
-        (extraction,) = re.findall(r"{(.*)}", s)
+        (extraction,) = re.findall(r"{(.*)}", s, re.DOTALL)
     except ValueError:
         raise ValueError(f"None or too many curly brackets : {s}")
     return extraction
