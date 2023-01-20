@@ -9,23 +9,57 @@ from podcast2podcast.config import settings
 from podcast2podcast.utils import retry
 
 SUMMARIZE = """\
-The following is the description of a podcast episode. 
+Consider the following podcast description.
+
+Description:  With little warning or regulation, companies are increasingly \
+using facial recognition technology on their customers -- as a security \
+measure, they say. But what happens when the systems are actually being used \
+to punish the companies' enemies? Guest: Kashmir Hill, a technology reporter \
+for The New York Times. Background reading: Madison Square Garden \
+Entertainment, the owner of the arena, has put lawyers who represent people \
+suing it on an "exclusion list" to keep them out of concerts and sporting \
+events. Some have undermined the company's ban by using a law passed in 1941 \
+to protect theater critics. For more information on today's episode, visit \
+nytimes.com/thedaily. Transcripts of each episode will be made available by \
+the next workday.
+
+This is an example of a summary in a JSON format.
+
+{{"summary":  "This podcast episode explores the rise of facial recognition \
+technology and the potential implications when companies use it to punish \
+their enemies. Guest Kashmir Hill, a technology reporter for The New York \
+Times, dives into an example of this happening at Madison Square Garden \
+Entertainment, and how a law from 1941 has been used to challenge the \
+company's ban."}}
+
+Please summarize the podcast description as a JSON.
 
 Description: {}
 
-Please write a concise summary of this podcast as a JSON.
 """
 
 REWRITE = """\
-Please write dialog for a talk show where the host, "JeremyBot," discusses and summarizes a podcast. There are no guests on this show. Respond with JSON and make sure to end with the tagline: "That's all for today. Join us next time for another exciting summary."
+Please write dialog for a talk show where the host, "JeremyBot," discusses and \
+summarizes a podcast. There are no guests on this show. Respond with JSON and \
+make sure to end with the tagline: "That's all for today. Join us next time \
+for another exciting summary."
 
 For example, consider the following summary.
 
-Summary: This week on the Slate Gabfest, David Plotz, Emily Bazelon, and John Dickerson discuss the House GOP's "Weaponization of Government" subcommittee, the insurrection in Brazil, Prince Harry's book "Spare", and the status of "return to office". They also provide references and chatters from John, Emily, David, and a listener.
+Summary: This week on the Slate Gabfest, David Plotz, Emily Bazelon, and John \
+Dickerson discuss the House GOP's "Weaponization of Government" subcommittee, \
+the insurrection in Brazil, Prince Harry's book "Spare", and the status of \
+"return to office". They also provide references and chatters from John, Emily, \
+David, and a listener.
 
 For that summary, you could write the following:
 
-{{"dialog": "Welcome! Today we are summarizing The Slate Political Gabfest. On this episode, David Plotz, Emily Bazelon, and John Dickerson discuss the House GOP's 'Weaponization of Government' subcommittee, the insurrection in Brazil, Prince Harry's book 'Spare', and the status of 'return to office'. They also provide references and chatters from John, Emily, David, and a listener. That's all for today. Join us next time for another exciting summary."}}
+{{"dialog": "Welcome! Today we are summarizing The Slate Political Gabfest. On \
+this episode, David Plotz, Emily Bazelon, and John Dickerson discuss the House \
+GOP's 'Weaponization of Government' subcommittee, the insurrection in Brazil, \
+Prince Harry's book 'Spare', and the status of 'return to office'. They also \
+provide references and chatters from John, Emily, David, and a listener. \
+That's all for today. Join us next time for another exciting summary."}}
 
 In this case, summarize {}:
 
