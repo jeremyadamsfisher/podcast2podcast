@@ -9,30 +9,9 @@ from podcast2podcast.config import settings
 from podcast2podcast.utils import retry
 
 SUMMARIZE = """\
-Consider the following podcast description.
-
-Description:  With little warning or regulation, companies are increasingly \
-using facial recognition technology on their customers -- as a security \
-measure, they say. But what happens when the systems are actually being used \
-to punish the companies' enemies? Guest: Kashmir Hill, a technology reporter \
-for The New York Times. Background reading: Madison Square Garden \
-Entertainment, the owner of the arena, has put lawyers who represent people \
-suing it on an "exclusion list" to keep them out of concerts and sporting \
-events. Some have undermined the company's ban by using a law passed in 1941 \
-to protect theater critics. For more information on today's episode, visit \
-nytimes.com/thedaily. Transcripts of each episode will be made available by \
-the next workday.
-
-This is an example of a summary in a JSON format.
-
-{{"summary":  "This podcast episode explores the rise of facial recognition \
-technology and the potential implications when companies use it to punish \
-their enemies. Guest Kashmir Hill, a technology reporter for The New York \
-Times, dives into an example of this happening at Madison Square Garden \
-Entertainment, and how a law from 1941 has been used to challenge the \
-company's ban."}}
-
-Please summarize the podcast description as a JSON.
+Please summarize the following podcast description as a JSON. Only include \
+information about the content of the episode. For example, ignore links \
+to the podcast's website and social media accounts.
 
 Description: {}
 
