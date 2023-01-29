@@ -1,4 +1,5 @@
 import time
+import traceback
 from contextlib import contextmanager
 
 import requests
@@ -34,7 +35,10 @@ def retry(n=3, delay=5):
                     return f(*args, **kwargs)
                 except Exception as e:
                     logger.warning(
-                        "failed on try {}: {}\n{}", i + 1, e, e.__traceback__
+                        "failed on try {}: {}\n{}",
+                        i + 1,
+                        e,
+                        traceback.format_tb(e.__traceback__),
                     )
                     logger.info("waiting for {} seconds", delay ** (i + 1))
                     time.sleep(delay ** (i + 1))

@@ -167,7 +167,7 @@ def text_complete(
         )
         return output_prefix + response.choices[0]["text"].strip()
     except Exception as e:
-        raise CompletionError(f"Error completing text: {e}\n{e.__traceback__}")
+        raise CompletionError(f"Error completing text: {e}")
 
 
 def extract_from_curly_brackets(s: str) -> str:
@@ -231,5 +231,5 @@ def json_complete(
     try:
         completion = json.loads(completion.replace("\n", r"\n"))[key]
     except (json.JSONDecodeError, TypeError):
-        raise json.JSONDecodeError(f"Invalid JSON: {completion}")
+        raise ValueError(f"Invalid JSON: {completion}")
     return completion
