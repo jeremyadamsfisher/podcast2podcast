@@ -74,6 +74,10 @@ def new_dialog(podcast_title, episode_title, description) -> str:
     return dialog
 
 
+class CompletionError(Exception):
+    pass
+
+
 def generate_summary(description: str) -> str:
     """Summarize a podcast description.
 
@@ -85,7 +89,9 @@ def generate_summary(description: str) -> str:
 
     """
     description = re.sub(r"\n*", " ", description)
-    summary = json_complete(prompt=SUMMARIZE.format(description), key="summary")
+    summary = json_complete(
+        prompt=SUMMARIZE.format(description), key="summary", max_tokens=512
+    )
     logger.info("Summary: {}", summary)
     return summary
 
@@ -112,6 +118,7 @@ def generate_dialog(summary: str, podcast_title: str, episode_title: str) -> str
         output_prefix=FIRST_LINE.format(podcast_title.title(), episode_title.title()),
         key="dialog",
         attempt_fix=attempt_to_salvage_dialog_that_is_slightly_too_long,
+        max_tokens=600,
     )
     logger.info("Dialog: {}", dialog)
     return dialog
@@ -142,23 +149,25 @@ def text_complete(
         prompt (str): Prompt to complete.
         model (str, optional): Model to use. Defaults to "text-davinci-003".
         max_tokens (int, optional): Maximum number of tokens to generate. Defaults to 256.
-        json_capture (bool, optional): Whether to parse outputs as a JSON. Defaults to False.
         output_prefix (str, optional): Prefix to add to the output. Defaults to "".
 
     Returns:
         str: Completed text, not including the prompt.
 
     """
-    response = openai.Completion.create(
-        prompt=prompt + output_prefix,
-        model=model,
-        max_tokens=max_tokens,
-        temperature=0.7,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-    return output_prefix + response.choices[0]["text"].strip()
+    try:
+        response = openai.Completion.create(
+            prompt=prompt + output_prefix,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=0.7,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0,
+        )
+        return output_prefix + response.choices[0]["text"].strip()
+    except Exception as e:
+        raise CompletionError(f"Error completing text: {e}\n{e.__traceback__}")
 
 
 def extract_from_curly_brackets(s: str) -> str:
@@ -181,7 +190,7 @@ def extract_from_curly_brackets(s: str) -> str:
     return extraction
 
 
-@retry(n=3, delay=10)
+@retry(n=5, delay=2)
 def json_complete(
     key: str,
     prompt: str,
