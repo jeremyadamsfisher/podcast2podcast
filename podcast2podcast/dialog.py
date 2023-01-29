@@ -124,6 +124,25 @@ def generate_dialog(summary: str, podcast_title: str, episode_title: str) -> str
     return dialog
 
 
+def fix_inner_quotation_marks(json_string, key):
+    """Fix inner quotation marks.
+
+    Example:
+        >>> j = '''{"summary": "17% of the Amazon has been converted to cropland or cattle pasture in the past half-century, resulting in less recycled rain, less of a canopy to shield against sunlight, and the weakening of "flying rivers". If deforestation reaches 20-25% of the original area, the rainforest will collapse into scrubby savanna in a matter of decades, with catastrophic effects on the tens of thousands of species that live there. Scientists are also concerned about the potential for this regional, ecological tipping point to produce knock-on effects in the global climate."}'''
+        >>> fix_inner_quotation_marks(j, "summary")
+        '{"summary": "17% of the Amazon has been converted to cropland or cattle pasture in the past half-century, resulting in less recycled rain, less of a canopy to shield against sunlight, and the weakening of 'flying rivers'. If deforestation reaches 20-25% of the original area, the rainforest will collapse into scrubby savanna in a matter of decades, with catastrophic effects on the tens of thousands of species that live there. Scientists are also concerned about the potential for this regional, ecological tipping point to produce knock-on effects in the global climate."}'
+
+    Args:
+        json_string (str): The mal-formatted JSON string.
+        key (str): The key of the JSON object.
+
+    Returns:
+        str: The fixed JSON string.
+    """
+    pat = r"(?<!{)(?<!" + key + r')(?<!: )"(?!})'
+    return re.sub(pat, "'", json_string)
+
+
 def attempt_to_salvage_dialog_that_is_slightly_too_long(dialog):
     pat = r"(that'?s all for today.*$)"
     if re.findall(pat, dialog, flags=re.IGNORECASE):
@@ -220,6 +239,10 @@ def json_complete(
         max_tokens,
         output_prefix=json_start,
     )
+    completion_fixed = fix_inner_quotation_marks(completion, key)
+    if completion_fixed != completion:
+        logger.warning(f"Invalid JSON: {completion}. Attempting to fix...")
+        completion = completion_fixed
     try:
         completion = extract_from_curly_brackets(completion)
     except ValueError as e:
