@@ -39,20 +39,10 @@ def break_up_long_sentence(sent: str):
     return sum((break_up_long_sentence(s) for s in (left, right)), [])
 
 
-def tts(
+def tts_gen(
     transcript: str,
     preset: Literal["ultra_fast", "fast", "standard", "high_quality"] = "high_quality",
 ) -> AudioSegment:
-    """Convert a transcript to speech.
-
-    Args:
-        transcript (str): Transcript.
-        preset (str, optional): TTS preset. Defaults to "high_quality".
-
-    Returns:
-        AudioSegment: Audio of podcast episode.
-
-    """
 
     # importing here to avoid doing so if using WaveNet
     from tortoise.api import TextToSpeech
@@ -61,7 +51,6 @@ def tts(
     tts = TextToSpeech()
     mouse_voice_samples, mouse_conditioning_latents = load_voice("train_mouse")
 
-    audio_segments = []
     for sentence in nlp(transcript).sents:
         for chunk in break_up_long_sentence(sentence.text):
             logger.info("running tts on: {}", chunk)
@@ -77,8 +66,21 @@ def tts(
             with NamedTemporaryFile(suffix=".wav") as t:
                 torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
                 segment = AudioSegment.from_wav(t.name)
-                audio_segments.append(segment)
+                yield segment
 
-    audio = sum(audio_segments)
 
-    return audio
+def tts(transcript, preset):
+    """Convert a transcript to speech.
+
+    Args:
+        transcript (str): Transcript.
+        preset (str, optional): TTS preset. Defaults to "high_quality".
+
+    Returns:
+        AudioSegment: Audio of podcast episode.
+
+    """
+    audio_segments = []
+    for segment in tts_gen(transcript, preset):
+        audio_segments.append(segment)
+    return sum(audio_segments)
