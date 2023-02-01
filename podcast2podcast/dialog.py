@@ -1,3 +1,4 @@
+import ast
 import json
 import re
 from typing import Callable, Optional
@@ -253,6 +254,10 @@ def json_complete(
         completion = extract_from_curly_brackets(completion)
     try:
         completion = json.loads(completion.replace("\n", r"\n"))[key]
-    except (json.JSONDecodeError, TypeError):
-        raise ValueError(f"Invalid JSON: {completion}")
+    except (json.JSONDecodeError, TypeError) as e_json:
+        logger.warning("Invalid JSON: {}", completion)
+        try:
+            completion = ast.literal_eval(completion)[key]
+        except Exception as e:
+            raise ValueError(f"Invalid completion: {completion}. {e_json} -> {e}")
     return completion
