@@ -40,7 +40,7 @@ def pipeline(
     with yap(about="creating new dialog"):
         transcript = new_dialog(*details)
         logger.info("Transcript: {}", transcript)
-    if output == PipelineOutputType.Text or output == PipelineOutputType.Text.value:
+    if output == PipelineOutputType.Text or output == "text":
         return transcript
     with yap(about="generating audio"):
         tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
