@@ -40,7 +40,7 @@ def pipeline(
     with yap(about="generating audio"):
         if tts_method == "google":
             audio = google_tts(transcript)
-        elif tts_method == "tortoise_tts":
+        elif tts_method == "tortoise":
             audio = tortoise_tts(transcript, preset="high_quality")
         else:
             raise ValueError(tts_method)
