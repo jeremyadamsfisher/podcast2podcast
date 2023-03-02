@@ -59,7 +59,7 @@ def generate_transcript(podcast_name: str, episode_name: str, summary: str) -> s
         episode_name = episode_name + "."
 
     episode_info = {"episode_name": episode_name, "podcast_name": podcast_name}
-
     llm_output = transcript_chain.predict(summary=summary, **episode_info).strip()
+    full_output = FIRST_LINE.format(**episode_info) + " " + llm_output + TAGLINE
 
-    return FIRST_LINE.format(episode_info) + " " + llm_output + TAGLINE
+    return full_output
