@@ -1,12 +1,13 @@
 from langchain import LLMChain, OpenAI, PromptTemplate
 
+END = "Thus concludes summary of the podcast."
+
 SUMMARIZE_TEMPLATE_STR = """\
 Please summarize the following podcast description. Only include \
 information about the content of the episode. For example, ignore links \
 to the podcast's website, social media accounts and background reading.
 
-It is CRUCIAL to end your summary with the sentence: Thus concludes \
-summary of the podcast.
+It is CRUCIAL to end your summary with the sentence: {end}
 
 Here is the description:
 
@@ -22,12 +23,12 @@ Summary:\
 summarize_chain = LLMChain(
     llm=OpenAI(
         temperature=0.0,
-        model_kwargs={"stop": ["Thus concludes the summary of the podcast."]},
+        model_kwargs={"stop": [END]},
     ),
     prompt=PromptTemplate(
-        input_variables=["description"],
+        input_variables=["description", "end"],
         template=SUMMARIZE_TEMPLATE_STR,
-    ),
+    ).partial(end=END),
 )
 
 

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 def pipeline(
     url,
     episode_idx,
-    tts_method: Literal["google", "tortoise", None] = "google",
+    tts_method: Literal["google", "tortoise", None] = "tortoise",
 ) -> Union[str, "AudioSegment"]:
     """Run the entire pipeline (transcription to spoken output).
 
@@ -38,7 +38,10 @@ def pipeline(
         return transcript
 
     with yap(about="generating audio"):
-        tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
-        audio = tts(transcript)
-
+        if tts_method == "google":
+            audio = google_tts(transcript)
+        elif tts_method == "tortoise_tts":
+            audio = tortoise_tts(transcript, preset="high_quality")
+        else:
+            raise ValueError(tts_method)
     return audio

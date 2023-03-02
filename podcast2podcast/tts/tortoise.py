@@ -39,11 +39,7 @@ def break_up_long_sentence(sent: str):
     return sum((break_up_long_sentence(s) for s in (left, right)), [])
 
 
-def tts_gen(
-    transcript: str,
-    preset: Literal["ultra_fast", "fast", "standard", "high_quality"] = "high_quality",
-) -> AudioSegment:
-
+def tts_gen(transcript: str, preset: str) -> AudioSegment:
     # importing here to avoid doing so if using WaveNet
     from tortoise.api import TextToSpeech
     from tortoise.utils.audio import load_voice
@@ -69,7 +65,10 @@ def tts_gen(
                 yield segment
 
 
-def tts(transcript, preset):
+def tts(
+    transcript,
+    preset: Literal["ultra_fast", "fast", "standard", "high_quality"] = "high_quality",
+):
     """Convert a transcript to speech.
 
     Args:
