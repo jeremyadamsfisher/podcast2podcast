@@ -1,6 +1,6 @@
 from langchain import LLMChain, OpenAI, PromptTemplate
 
-summarize_template = """\
+SUMMARIZE_TEMPLATE_STR = """\
 Please summarize the following podcast description. Only include \
 information about the content of the episode. For example, ignore links \
 to the podcast's website, social media accounts and background reading.
@@ -26,7 +26,7 @@ summarize_chain = LLMChain(
     ),
     prompt=PromptTemplate(
         input_variables=["description"],
-        template=summarize_template,
+        template=SUMMARIZE_TEMPLATE_STR,
     ),
 )
 

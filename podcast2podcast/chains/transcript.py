@@ -29,7 +29,7 @@ podcasts. Today we are summarizing {podcast_name}: {episode_name}"""
 
 
 transcript_template = PromptTemplate(
-    input_variables=["summary", "tagline"],
+    input_variables=["summary", "tagline", "podcast_name", "episode_name"],
     template=PROMPT_TEMPLATE_STR,
 ).partial(tagline=tagline)
 
