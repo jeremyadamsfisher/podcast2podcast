@@ -19,6 +19,9 @@ def new_dialog(podcast_title, episode_title, description) -> str:
     logger.info("Description: {}", description)
 
     summary = generate_summary(description)
+    logger.info("Summary: {}", summary)
+
     transcript = generate_transcript(podcast_title, episode_title, summary)
+    logger.info("Transcript: {}", transcript)
 
     return transcript
