@@ -6,4 +6,4 @@
 
 Podcast2Podcast is a machine learning pipeline to convert podcast episodes to a podcast episode where the host (JeremyBoy) discuss the episode of the podcast.
 
-It's running on the NY Times' The Daily.[Check out it.](https://podcasts.apple.com/us/podcast/the-d-ai-ly-with-jeremybot/id1667416605)
+It's running regularly on the NY Times' The Daily. [Check out it.](https://podcasts.apple.com/us/podcast/the-d-ai-ly-with-jeremybot/id1667416605)
