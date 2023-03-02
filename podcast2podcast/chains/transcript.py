@@ -29,10 +29,9 @@ podcasts. Today we are summarizing {podcast_name}: {episode_name}"""
 
 
 transcript_template = PromptTemplate(
-    input_variables=["summary"],
+    input_variables=["summary", "tagline"],
     template=PROMPT_TEMPLATE_STR,
-    partial_varibales={"tagline": tagline},
-)
+).partial(tagline=tagline)
 
 transcript_chain = LLMChain(
     llm=OpenAI(temperature=0.0, model_kwargs={"stop": [tagline]}),
@@ -50,8 +49,13 @@ def generate_transcript(podcast_name: str, episode_name: str, summary: str) -> s
         str: The dialog.
 
     """
+    # ensure punctuation mark between the end of the prompt and the beginning
+    # of the model prediction
     if not any(episode_name.endswith(punc) for punc in ".!?"):
         episode_name = episode_name + "."
+
     return transcript_chain.predict(
-        summary=summary, podcast_name=podcast_name, episode_name=episode_name
+        summary=summary,
+        podcast_name=podcast_name,
+        episode_name=episode_name,
     ).strip()
