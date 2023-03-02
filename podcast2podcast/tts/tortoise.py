@@ -1,11 +1,12 @@
 from tempfile import NamedTemporaryFile
 from typing import Literal
 
+import spacy
 import torchaudio
 from loguru import logger
 from pydub import AudioSegment
 
-from podcast2podcast.nlp import nlp
+nlp = spacy.load("en_core_web_sm")
 
 
 def break_up_long_sentence(sent: str):
@@ -28,6 +29,7 @@ def break_up_long_sentence(sent: str):
 
     Returns:
         List[str]: List of clauses or a sentence of a reasonable size.
+
     """
     if sent.count(" ") < 25 or sent.count(",") == 0:
         return [sent.strip()]
@@ -37,27 +39,18 @@ def break_up_long_sentence(sent: str):
     return sum((break_up_long_sentence(s) for s in (left, right)), [])
 
 
-def text2speech_pipeline(
+def tts_gen(
     transcript: str,
     preset: Literal["ultra_fast", "fast", "standard", "high_quality"] = "high_quality",
 ) -> AudioSegment:
-    """Convert a transcript to speech.
 
-    Args:
-        transcript (str): Transcript.
-        preset (str, optional): TTS preset. Defaults to "high_quality".
-
-    Returns:
-        AudioSegment: Audio of podcast episode.
-
-    """
+    # importing here to avoid doing so if using WaveNet
     from tortoise.api import TextToSpeech
     from tortoise.utils.audio import load_voice
 
     tts = TextToSpeech()
     mouse_voice_samples, mouse_conditioning_latents = load_voice("train_mouse")
 
-    audio_segments = []
     for sentence in nlp(transcript).sents:
         for chunk in break_up_long_sentence(sentence.text):
             logger.info("running tts on: {}", chunk)
@@ -70,12 +63,24 @@ def text2speech_pipeline(
                 )
             except AssertionError:
                 raise ValueError("Tortoise cannot deal with long texts.")
-            else:
-                with NamedTemporaryFile(suffix=".wav") as t:
-                    torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
-                    segment = AudioSegment.from_wav(t.name)
-                    audio_segments.append(segment)
+            with NamedTemporaryFile(suffix=".wav") as t:
+                torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
+                segment = AudioSegment.from_wav(t.name)
+                yield segment
 
-    audio = sum(audio_segments)
 
-    return audio
+def tts(transcript, preset):
+    """Convert a transcript to speech.
+
+    Args:
+        transcript (str): Transcript.
+        preset (str, optional): TTS preset. Defaults to "high_quality".
+
+    Returns:
+        AudioSegment: Audio of podcast episode.
+
+    """
+    audio_segments = []
+    for segment in tts_gen(transcript, preset):
+        audio_segments.append(segment)
+    return sum(audio_segments)

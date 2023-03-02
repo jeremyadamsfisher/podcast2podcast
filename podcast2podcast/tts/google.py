@@ -3,14 +3,15 @@ import tempfile
 from pydub import AudioSegment
 
 
-def text2speech_pipeline(transcript: str) -> AudioSegment:
-    """Convert a transcript to speech.
+def tts(transcript: str) -> AudioSegment:
+    """Convert a transcript to speech using Google's Text-to-Speech API.
 
     Args:
         transcript (str): Transcript.
 
     Returns:
         AudioSegment: Audio of the transcript
+
     """
 
     from google.cloud import texttospeech as tts
