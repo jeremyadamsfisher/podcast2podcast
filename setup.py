@@ -2,7 +2,6 @@ from setuptools import find_packages, setup
 
 requirements = [
     "Unidecode",
-    "dynaconf",
     "google-cloud-texttospeech",
     "loguru",
     "openai",

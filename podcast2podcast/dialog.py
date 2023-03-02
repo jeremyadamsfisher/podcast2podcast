@@ -1,9 +1,7 @@
-import openai
 from loguru import logger
 
 from podcast2podcast.chains.summarize import generate_summary
 from podcast2podcast.chains.transcript import generate_transcript
-from podcast2podcast.config import settings
 
 
 def new_dialog(podcast_title, episode_title, description) -> str:
@@ -18,8 +16,6 @@ def new_dialog(podcast_title, episode_title, description) -> str:
         str: The new dialog transcript.
 
     """
-    openai.api_key = settings.openai_token
-
     logger.info("Description: {}", description)
 
     summary = generate_summary(description)
