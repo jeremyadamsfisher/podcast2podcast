@@ -1,5 +1,3 @@
-import sys
-
 from setuptools import find_packages, setup
 
 requirements = [
@@ -13,6 +11,7 @@ requirements = [
     "toml",
     "tqdm",
     "untangle",
+    "langchain",
 ]
 
 setup(

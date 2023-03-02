@@ -16,6 +16,7 @@ def pipeline(
     url,
     episode_idx,
     tts_method: Literal["google", "tortoise"] = "google",
+    output: Literal["text", "audio"] = "audio",
 ) -> "AudioSegment":
     """Run the entire pipeline (transcription to spoken output).
 
@@ -33,6 +34,8 @@ def pipeline(
     with yap(about="creating new dialog"):
         transcript = new_dialog(*details)
         logger.info("Transcript: {}", transcript)
+    if output == "text":
+        return transcript
     with yap(about="generating audio"):
         tts = {"google": google_tts, "tortoise": tortoise_tts}[tts_method]
         audio = tts(transcript)
