@@ -1,7 +1,4 @@
-from enum import Enum
-from typing import TYPE_CHECKING, Literal
-
-from loguru import logger
+from typing import TYPE_CHECKING, Literal, Union
 
 from podcast2podcast.dialog import new_dialog
 from podcast2podcast.rss import get_podcast_details
@@ -17,7 +14,7 @@ def pipeline(
     url,
     episode_idx,
     tts_method: Literal["google", "tortoise", None] = "google",
-) -> "AudioSegment":
+) -> Union[str, "AudioSegment"]:
     """Run the entire pipeline (transcription to spoken output).
 
     Args:
