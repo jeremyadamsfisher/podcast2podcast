@@ -1,6 +1,9 @@
 from langchain import LLMChain, OpenAI, PromptTemplate
 
-tagline = "That's all for today. Join us next time for another exciting summary."
+TAGLINE = "That's all for today. Join us next time for another exciting summary."
+
+FIRST_LINE = """Welcome back. I'm JeremyBot, an artificial intelligence that summarizes \
+podcasts. Today we are summarizing {podcast_name}: {episode_name}"""
 
 PROMPT_TEMPLATE_STR = """\
 Please write dialog for a talk show where the host, "JeremyBot," discusses and \
@@ -24,17 +27,17 @@ provide references and chatters from John, Emily, David, and a listener. \
 
 Summary: {summary}
 
-Dialog: Welcome back. I'm JeremyBot, an artificial intelligence that summarizes \
-podcasts. Today we are summarizing {podcast_name}: {episode_name}"""
+Dialog: """
 
+PROMPT_TEMPLATE_STR += FIRST_LINE
 
 transcript_template = PromptTemplate(
     input_variables=["summary", "tagline", "podcast_name", "episode_name"],
     template=PROMPT_TEMPLATE_STR,
-).partial(tagline=tagline)
+).partial(tagline=TAGLINE)
 
 transcript_chain = LLMChain(
-    llm=OpenAI(temperature=0.0, model_kwargs={"stop": [tagline]}),
+    llm=OpenAI(temperature=0.0, model_kwargs={"stop": [TAGLINE]}),
     prompt=transcript_template,
 )
 
@@ -49,13 +52,14 @@ def generate_transcript(podcast_name: str, episode_name: str, summary: str) -> s
         str: The dialog.
 
     """
+
     # ensure punctuation mark between the end of the prompt and the beginning
     # of the model prediction
     if not any(episode_name.endswith(punc) for punc in ".!?"):
         episode_name = episode_name + "."
 
-    return transcript_chain.predict(
-        summary=summary,
-        podcast_name=podcast_name,
-        episode_name=episode_name,
-    ).strip()
+    episode_info = {"episode_name": episode_name, "podcast_name": podcast_name}
+
+    llm_output = transcript_chain.predict(summary=summary, **episode_info).strip()
+
+    return FIRST_LINE.format(episode_info) + " " + llm_output + TAGLINE
