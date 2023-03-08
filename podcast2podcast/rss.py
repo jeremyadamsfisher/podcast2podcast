@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from html.parser import HTMLParser
 from io import StringIO
 from typing import List, Tuple
@@ -49,24 +50,8 @@ def parse_rss(rss_url: str) -> Tuple[str, List[Tuple[str, str]]]:
         for e in xml.rss.channel.item:
             title = unidecode(e.title.cdata)
             description = TagStripper.from_html(unidecode(e.description.cdata))
-            episodes.append((title, description))
+            episodes.append(title, description)
     except (SAXParseException, AttributeError):
         raise ValueError(f"Could not parse {rss_url}")
 
     return podcast_title, episodes
-
-
-def get_podcast_details(rss_url: str, episode_idx: int) -> Tuple[str, str, str]:
-    """Pull the relevant episode details from an RSS feed.
-
-    Args:
-        rss_url (str): The RSS feed URL.
-        episode_idx (int): The episode index.
-
-    Returns:
-        PodcastEpisode: The episode details."""
-
-    podcast_title, episodes = parse_rss(rss_url)
-    episode_title, description = episodes[episode_idx]
-
-    return podcast_title, episode_title, description
