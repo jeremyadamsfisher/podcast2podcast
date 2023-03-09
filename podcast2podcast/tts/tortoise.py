@@ -1,5 +1,6 @@
+import abc
 from tempfile import NamedTemporaryFile
-from typing import Literal
+from typing import Literal, Optional
 
 import spacy
 import torchaudio
@@ -39,7 +40,19 @@ def break_up_long_sentence(sent: str):
     return sum((break_up_long_sentence(s) for s in (left, right)), [])
 
 
-def tts_gen(transcript: str, preset: str) -> AudioSegment:
+class TTSCache(abc.ABC):
+    """Cache for TTS methods."""
+
+    def __getitem__(self, item):
+        raise NotImplementedError
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError
+
+
+def tts_gen(
+    transcript: str, preset: str, cache: Optional[TTSCache] = None
+) -> AudioSegment:
     # importing here to avoid doing so if using WaveNet
     from tortoise.api import TextToSpeech
     from tortoise.utils.audio import load_voice
@@ -51,18 +64,22 @@ def tts_gen(transcript: str, preset: str) -> AudioSegment:
         for chunk in break_up_long_sentence(sentence.text):
             logger.info("running tts on: {}", chunk)
             try:
-                speech = tts.tts_with_preset(
-                    chunk,
-                    preset=preset,
-                    voice_samples=mouse_voice_samples,
-                    conditioning_latents=mouse_conditioning_latents,
-                )
-            except AssertionError:
-                raise ValueError("Tortoise cannot deal with long texts.")
-            with NamedTemporaryFile(suffix=".wav") as t:
-                torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
-                segment = AudioSegment.from_wav(t.name)
-                yield segment
+                assert cache is not None
+                segment = cache[chunk]
+            except (KeyError, AssertionError):
+                try:
+                    speech = tts.tts_with_preset(
+                        chunk,
+                        preset=preset,
+                        voice_samples=mouse_voice_samples,
+                        conditioning_latents=mouse_conditioning_latents,
+                    )
+                except AssertionError:
+                    raise ValueError("Tortoise cannot deal with long texts.")
+                with NamedTemporaryFile(suffix=".wav") as t:
+                    torchaudio.save(t.name, speech.squeeze(0).cpu(), 24000)
+                    segment = AudioSegment.from_wav(t.name)
+            yield segment
 
 
 def tts(
